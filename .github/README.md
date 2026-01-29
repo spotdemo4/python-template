@@ -77,3 +77,9 @@ docker run ghcr.io/spotdemo4/python-template:0.0.1
 ```elm
 nix run github:spotdemo4/python-template
 ```
+
+### uv
+
+```elm
+uvx git+https://github.com/spotdemo4/python-template
+```
