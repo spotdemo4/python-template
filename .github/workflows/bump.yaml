@@ -1,0 +1,40 @@
+name: bump
+
+on:
+  schedule:
+    - cron: "0 22 * * 1-5" # every weekday at 22:00 UTC
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "force"
+        required: false
+        type: choice
+        default: "true"
+        options:
+          - "true"
+          - "false"
+
+concurrency:
+  group: release
+
+permissions:
+  contents: read
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: spotdemo4/nix-init@df23370aceae9a7becda32705c2bc6eb7bc6174e # v1.23.0
+        with:
+          app_id: ${{ vars.CLIENT_ID }}
+          app_key: ${{ secrets.PRIVATE_KEY }}
+          fetch_depth: 0
+          shell: bump
+
+      - name: Bump
+        run: bumper
+        env:
+          FORCE: ${{ inputs.force }}
+          PATHS: |-
+            .github/README.md

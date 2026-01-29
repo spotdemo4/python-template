@@ -1,0 +1,17 @@
+[project]
+name = "python-template"
+version = "0.0.1"
+description = "Add your description here"
+readme = ".github/README.md"
+authors = [
+    { name = "spotdemo4", email = "me@trev.xyz" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+python-template = "python_template:main"
+
+[build-system]
+requires = ["uv_build>=0.9.9,<0.10.0"]
+build-backend = "uv_build"
