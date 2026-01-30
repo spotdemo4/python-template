@@ -9,12 +9,12 @@ template for starting [Python](https://www.python.org/) projects
 
 part of [spotdemo4/templates](https://github.com/spotdemo4/templates)
 
-## Requirements
+## requirements
 
 - [nix](https://nixos.org/)
 - [direnv](https://direnv.net/) (optional)
 
-## Getting started
+## getting started
 
 initialize direnv:
 
@@ -57,7 +57,7 @@ to manually create a version bump:
 bumper action.yaml .github/README.md
 ```
 
-## Use
+## use
 
 ### docker
 
