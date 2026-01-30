@@ -62,14 +62,14 @@ bumper action.yaml .github/README.md
 ### docker
 
 ```elm
-docker run ghcr.io/spotdemo4/python-template:0.0.1
+docker run ghcr.io/spotdemo4/python-template:0.0.2
 ```
 
 ### action
 
 ```yaml
 - name: python template
-  uses: spotdemo4/python-template@v0.0.1
+  uses: spotdemo4/python-template@v0.0.2
 ```
 
 ### nix
