@@ -45,7 +45,7 @@
             shellHook = pkgs.shellhook.ref;
             packages = with pkgs; [
               # python
-              python3
+              python314
               uv
 
               # lint
@@ -177,7 +177,7 @@
         };
 
         packages = with pkgs.lib; rec {
-          default = pkgs.python3Packages.buildPythonPackage (finalAttrs: {
+          default = pkgs.python314Packages.buildPythonPackage (finalAttrs: {
             pname = "python-template";
             version = "0.0.1";
             pyproject = true;
@@ -194,7 +194,7 @@
               );
             };
 
-            build-system = with pkgs.python3Packages; [
+            build-system = with pkgs.python314Packages; [
               setuptools
               uv-build
             ];

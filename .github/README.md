@@ -5,9 +5,9 @@
 [![nix](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fspotdemo4%2Fnode-template%2Frefs%2Fheads%2Fmain%2Fflake.lock&query=%24.nodes.nixpkgs.original.ref&logo=nixos&logoColor=%23bac2de&label=channel&labelColor=%23313244&color=%234d6fb7)](https://nixos.org/)
 [![python](<https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fspotdemo4%2Fpython-template%2Frefs%2Fheads%2Fmain%2F.python-version&search=(.*)&logo=python&logoColor=%23bac2de&label=version&labelColor=%23313244&color=%23306998>)](https://www.python.org/downloads/)
 
-Template for starting [Python](https://www.python.org/) projects
+template for starting [Python](https://www.python.org/) projects
 
-Part of [spotdemo4/templates](https://github.com/spotdemo4/templates)
+part of [spotdemo4/templates](https://github.com/spotdemo4/templates)
 
 ## Requirements
 
@@ -16,7 +16,7 @@ Part of [spotdemo4/templates](https://github.com/spotdemo4/templates)
 
 ## Getting started
 
-Initialize direnv:
+initialize direnv:
 
 ```elm
 ln -s .envrc.project .envrc &&
@@ -29,29 +29,29 @@ or manually enter the development environment:
 nix develop
 ```
 
-### Run
+### run
 
 ```elm
 nix run #dev
 ```
 
-### Build
+### build
 
 ```elm
 nix build
 ```
 
-### Check
+### check
 
 ```elm
 nix flake check
 ```
 
-### Release
+### release
 
-Releases are automatically created for [significant](https://www.conventionalcommits.org/en/v1.0.0/#summary) changes.
+releases are automatically created for [significant](https://www.conventionalcommits.org/en/v1.0.0/#summary) changes
 
-To manually create a version bump:
+to manually create a version bump:
 
 ```elm
 bumper action.yaml .github/README.md
@@ -59,20 +59,20 @@ bumper action.yaml .github/README.md
 
 ## Use
 
-### Docker
+### docker
 
 ```elm
 docker run ghcr.io/spotdemo4/python-template:0.0.1
 ```
 
-### Action
+### action
 
 ```yaml
 - name: python template
   uses: spotdemo4/python-template@v0.0.1
 ```
 
-### Nix
+### nix
 
 ```elm
 nix run github:spotdemo4/python-template

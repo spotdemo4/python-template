@@ -29,6 +29,15 @@
     {
       "groupName": "github actions",
       "matchManagers": ["github-actions"]
+    },
+    {
+      "groupName": "python packages",
+      "matchManagers": ["pep621"],
+      "matchUpdateTypes": ["patch", "pin", "digest"]
+    },
+    {
+      "enabled": false,
+      "matchManagers": ["pyenv"]
     }
   ]
 }
