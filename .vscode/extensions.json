@@ -2,6 +2,6 @@
   "recommendations": [
     "charliermarsh.ruff",
     "jnoortheen.nix-ide",
-    "prettier.prettier-vscode"
+    "esbenp.prettier-vscode"
   ]
 }
