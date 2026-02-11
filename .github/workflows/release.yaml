@@ -10,6 +10,7 @@ concurrency:
 
 permissions:
   contents: read
+  id-token: write
   packages: write
 
 jobs:
@@ -25,7 +26,7 @@ jobs:
           fetch_depth: 0
           shell: release
 
-      - name: Run nix-release
+      - name: Run flake-release
         run: flake-release
         env:
           GITHUB_TOKEN: ${{ steps.checkout.outputs.token }}

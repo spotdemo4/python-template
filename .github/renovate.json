@@ -32,7 +32,7 @@
     },
     {
       "matchManagers": ["pep621"],
-      "matchUpdateTypes": ["patch", "pin", "digest"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "groupName": "python packages"
     },
     {
