@@ -49,6 +49,8 @@
 
               # lint
               ruff
+
+              # format
               nixfmt
               prettier
 
