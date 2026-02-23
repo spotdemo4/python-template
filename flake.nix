@@ -186,19 +186,18 @@
 
             src = fs.toSource {
               root = ./.;
-              fileset = fs.difference ./. (
-                fs.unions [
-                  ./.vscode
-                  ./.github/workflows
-                  ./flake.nix
-                  ./flake.lock
-                ]
-              );
+              fileset = fs.unions [
+                ./uv.lock
+                ./pyproject.toml
+                ./.python-version
+                ./.github/README.md
+                (fs.fileFilter (file: file.hasExt "py") ./.)
+              ];
             };
 
-            build-system = with pkgs.python314Packages; [
-              setuptools
-              uv-build
+            build-system = with pkgs; [
+              python314Packages.setuptools
+              pkgs.uv-build.python314
             ];
 
             meta = {
