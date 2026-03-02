@@ -181,7 +181,7 @@
         packages = with pkgs.lib; rec {
           default = pkgs.python314Packages.buildPythonPackage (finalAttrs: {
             pname = "python-template";
-            version = "0.0.3";
+            version = "0.0.4";
             pyproject = true;
 
             src = fs.toSource {
