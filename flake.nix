@@ -195,9 +195,9 @@
               ];
             };
 
-            build-system = with pkgs; [
-              python314Packages.setuptools
-              pkgs.uv-build.python314
+            build-system = with pkgs.python314Packages; [
+              setuptools
+              uv-build
             ];
 
             meta = {
