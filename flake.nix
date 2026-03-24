@@ -22,21 +22,14 @@
 
   outputs =
     {
-      nixpkgs,
+      self,
       trev,
       ...
     }:
     trev.libs.mkFlake (
-      system:
+      system: init:
       let
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [
-            trev.overlays.packages
-            trev.overlays.libs
-          ];
-        };
-        fs = pkgs.lib.fileset;
+        pkgs = init.appendOverlays [ trev.overlays.python ];
       in
       {
         devShells = {
@@ -97,17 +90,9 @@
           };
         };
 
-        checks = pkgs.lib.mkChecks {
+        checks = pkgs.mkChecks {
           python = {
-            src = fs.toSource {
-              root = ./.;
-              fileset = fs.unions [
-                ./uv.lock
-                ./pyproject.toml
-                ./.python-version
-                (fs.fileFilter (file: file.hasExt "py") ./.)
-              ];
-            };
+            src = self.packages.${system}.default;
             deps = with pkgs; [
               ruff
             ];
@@ -117,23 +102,19 @@
           };
 
           nix = {
-            src = fs.toSource {
-              root = ./.;
-              fileset = fs.fileFilter (file: file.hasExt "nix") ./.;
-            };
+            root = ./.;
+            filter = file: file.hasExt "nix";
             deps = with pkgs; [
-              nixfmt-tree
+              nixfmt
             ];
-            script = ''
-              treefmt --ci
+            forEach = ''
+              nixfmt --check "$file"
             '';
           };
 
           renovate = {
-            src = fs.toSource {
-              root = ./.github;
-              fileset = ./.github/renovate.json;
-            };
+            root = ./.github;
+            fileset = ./.github/renovate.json;
             deps = with pkgs; [
               renovate
             ];
@@ -143,55 +124,51 @@
           };
 
           actions = {
-            src = fs.toSource {
-              root = ./.;
-              fileset = fs.unions [
-                ./action.yaml
-                ./.github/workflows
-              ];
-            };
+            root = ./.;
+            fileset = pkgs.lib.fileset.unions [
+              ./action.yaml
+              ./.github/workflows
+            ];
             deps = with pkgs; [
               action-validator
               octoscan
             ];
-            script = ''
-              action-validator **/*.yaml
-              octoscan scan .
+            forEach = ''
+              action-validator "$file"
+              octoscan scan "$file"
             '';
           };
 
           prettier = {
-            src = fs.toSource {
-              root = ./.;
-              fileset = fs.fileFilter (file: file.hasExt "yaml" || file.hasExt "json" || file.hasExt "md") ./.;
-            };
+            root = ./.;
+            filter = file: file.hasExt "yaml" || file.hasExt "json" || file.hasExt "md";
             deps = with pkgs; [
               prettier
             ];
-            script = ''
-              prettier --check .
+            forEach = ''
+              prettier --check "$file"
             '';
           };
         };
 
-        apps = pkgs.lib.mkApps {
-          dev.script = "uv run python-template";
+        apps = pkgs.mkApps {
+          dev = "uv run python-template";
         };
 
-        packages = with pkgs.lib; rec {
+        packages = pkgs.mkPackages pkgs (pkgs: {
           default = pkgs.python314Packages.buildPythonPackage (finalAttrs: {
             pname = "python-template";
             version = "0.0.4";
             pyproject = true;
 
-            src = fs.toSource {
+            src = pkgs.lib.fileset.toSource {
               root = ./.;
-              fileset = fs.unions [
+              fileset = pkgs.lib.fileset.unions [
                 ./uv.lock
                 ./pyproject.toml
                 ./.python-version
                 ./.github/README.md
-                (fs.fileFilter (file: file.hasExt "py") ./.)
+                (pkgs.lib.fileset.fileFilter (file: file.hasExt "py") ./.)
               ];
             };
 
@@ -203,38 +180,23 @@
             meta = {
               description = "python template";
               mainProgram = "python-template";
+              license = pkgs.lib.licenses.mit;
+              platforms = pkgs.lib.platforms.all;
               homepage = "https://github.com/spotdemo4/python-template";
               changelog = "https://github.com/spotdemo4/python-template/releases/tag/v${finalAttrs.version}";
-              license = licenses.mit;
-              platforms = platforms.all;
+              downloadPage = "https://github.com/spotdemo4/python-template/releases/tag/v${finalAttrs.version}";
             };
           });
+        });
 
-          image = pkgs.dockerTools.buildLayeredImage {
-            name = default.pname;
-            tag = default.version;
-
-            contents = with pkgs; [
-              dockerTools.caCertificates
-            ];
-
-            created = "now";
-            meta = default.meta;
-
-            config = {
-              Entrypoint = [ "${meta.getExe default}" ];
-              Labels = {
-                "org.opencontainers.image.title" = default.pname;
-                "org.opencontainers.image.description" = default.meta.description;
-                "org.opencontainers.image.version" = default.version;
-                "org.opencontainers.image.source" = default.meta.homepage;
-                "org.opencontainers.image.licenses" = default.meta.license.spdxId;
-              };
-            };
+        images = pkgs.mkImages pkgs (pkgs: {
+          default = pkgs.mkImage self.packages.${system}.default {
+            contents = with pkgs; [ dockerTools.caCertificates ];
           };
-        };
+        });
 
         formatter = pkgs.nixfmt-tree;
+        schemas = trev.schemas;
       }
     );
 }
