@@ -78,14 +78,9 @@
 
           vulnerable = pkgs.mkShell {
             packages = with pkgs; [
-              # python
-              pysentry
-
-              # flake
-              flake-checker
-
-              # actions
-              octoscan
+              pysentry # python
+              flake-checker # flake
+              octoscan # actions
             ];
           };
         };
@@ -155,7 +150,7 @@
           dev = "uv run python-template";
         };
 
-        packages = pkgs.mkPackages pkgs (pkgs: {
+        packages = {
           default = pkgs.python314Packages.buildPythonPackage (finalAttrs: {
             pname = "python-template";
             version = "0.0.4";
@@ -164,11 +159,11 @@
             src = pkgs.lib.fileset.toSource {
               root = ./.;
               fileset = pkgs.lib.fileset.unions [
-                ./uv.lock
-                ./pyproject.toml
                 ./.python-version
+                ./pyproject.toml
+                ./uv.lock
                 ./.github/README.md
-                (pkgs.lib.fileset.fileFilter (file: file.hasExt "py") ./.)
+                ./src
               ];
             };
 
@@ -187,13 +182,13 @@
               downloadPage = "https://github.com/spotdemo4/python-template/releases/tag/v${finalAttrs.version}";
             };
           });
-        });
+        };
 
-        images = pkgs.mkImages pkgs (pkgs: {
+        images = {
           default = pkgs.mkImage self.packages.${system}.default {
             contents = with pkgs; [ dockerTools.caCertificates ];
           };
-        });
+        };
 
         formatter = pkgs.nixfmt-tree;
         schemas = trev.schemas;
