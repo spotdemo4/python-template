@@ -150,15 +150,15 @@
           dev = "uv run python-template";
         };
 
-        packages = {
+        packages = with pkgs.lib; {
           default = pkgs.python314Packages.buildPythonPackage (finalAttrs: {
             pname = "python-template";
             version = "0.0.5";
             pyproject = true;
 
-            src = pkgs.lib.fileset.toSource {
+            src = fileset.toSource {
               root = ./.;
-              fileset = pkgs.lib.fileset.unions [
+              fileset = fileset.unions [
                 ./.python-version
                 ./pyproject.toml
                 ./uv.lock
@@ -175,8 +175,8 @@
             meta = {
               description = "python template";
               mainProgram = "python-template";
-              license = pkgs.lib.licenses.mit;
-              platforms = pkgs.lib.platforms.all;
+              license = licenses.mit;
+              platforms = platforms.all;
               homepage = "https://github.com/spotdemo4/python-template";
               changelog = "https://github.com/spotdemo4/python-template/releases/tag/v${finalAttrs.version}";
               downloadPage = "https://github.com/spotdemo4/python-template/releases/tag/v${finalAttrs.version}";
