@@ -182,7 +182,7 @@
             pyproject = true;
             build-system = with pkgs.python314Packages; [
               setuptools
-              uv-build
+              uv-build-latest
             ];
 
             meta = {
