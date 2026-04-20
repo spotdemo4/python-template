@@ -83,7 +83,7 @@
             packages = with pkgs; [
               pysentry # python
               flake-checker # flake
-              octoscan # actions
+              zizmor # actions
             ];
           };
         };
@@ -133,11 +133,11 @@
             ];
             packages = with pkgs; [
               action-validator
-              octoscan
+              zizmor
             ];
             forEach = ''
               action-validator "$file"
-              octoscan scan "$file"
+              zizmor --offline "$file"
             '';
           };
 
