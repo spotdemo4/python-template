@@ -1,16 +1,16 @@
 [project]
-name = "python-template"
+name = "spotdemo4.python-template"
 version = "0.0.5"
-description = "Add your description here"
-readme = ".github/README.md"
-authors = [
-    { name = "spotdemo4", email = "me@trev.xyz" }
-]
+description = "Python template"
+readme = "README.md"
+authors = [{ name = "spotdemo4", email = "me@trev.xyz" }]
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.14"
 dependencies = []
 
 [project.scripts]
-python-template = "python_template:main"
+python-template = "spotdemo4_python_template:main"
 
 [build-system]
 requires = ["uv_build>=0.11.0,<0.12.0"]

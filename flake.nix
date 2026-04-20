@@ -50,7 +50,6 @@
               # util
               bumper
               flake-release
-              renovate
             ];
           };
 
@@ -85,10 +84,14 @@
           };
         };
 
+        apps = pkgs.mkApps {
+          default = "uv run python-template";
+        };
+
         checks = pkgs.mkChecks {
           python = {
             src = self.packages.${system}.default;
-            deps = with pkgs; [
+            packages = with pkgs; [
               ruff
             ];
             script = ''
@@ -99,7 +102,7 @@
           nix = {
             root = ./.;
             filter = file: file.hasExt "nix";
-            deps = with pkgs; [
+            packages = with pkgs; [
               nixfmt
             ];
             forEach = ''
@@ -109,8 +112,8 @@
 
           renovate = {
             root = ./.github;
-            fileset = ./.github/renovate.json;
-            deps = with pkgs; [
+            files = ./.github/renovate.json;
+            packages = with pkgs; [
               renovate
             ];
             script = ''
@@ -120,11 +123,11 @@
 
           actions = {
             root = ./.;
-            fileset = pkgs.lib.fileset.unions [
+            files = [
               ./action.yaml
               ./.github/workflows
             ];
-            deps = with pkgs; [
+            packages = with pkgs; [
               action-validator
               octoscan
             ];
@@ -137,7 +140,7 @@
           prettier = {
             root = ./.;
             filter = file: file.hasExt "yaml" || file.hasExt "json" || file.hasExt "md";
-            deps = with pkgs; [
+            packages = with pkgs; [
               prettier
             ];
             forEach = ''
@@ -146,15 +149,19 @@
           };
         };
 
-        apps = pkgs.mkApps {
-          dev = "uv run python-template";
+        formatter = pkgs.treefmt.withConfig {
+          configFile = ./treefmt.toml;
+          runtimeInputs = with pkgs; [
+            ruff
+            nixfmt
+            prettier
+          ];
         };
 
-        packages = with pkgs.lib; {
-          default = pkgs.python314Packages.buildPythonPackage (finalAttrs: {
+        packages.default = pkgs.python314Packages.buildPythonPackage (
+          final: with pkgs.lib; {
             pname = "python-template";
             version = "0.0.5";
-            pyproject = true;
 
             src = fileset.toSource {
               root = ./.;
@@ -162,35 +169,37 @@
                 ./.python-version
                 ./pyproject.toml
                 ./uv.lock
-                ./.github/README.md
+                ./README.md
                 ./src
               ];
             };
 
+            pyproject = true;
             build-system = with pkgs.python314Packages; [
               setuptools
-              uv-build.latest
+              uv-build
             ];
 
             meta = {
-              description = "python template";
               mainProgram = "python-template";
+              description = "python template";
               license = licenses.mit;
               platforms = platforms.all;
               homepage = "https://github.com/spotdemo4/python-template";
-              changelog = "https://github.com/spotdemo4/python-template/releases/tag/v${finalAttrs.version}";
-              downloadPage = "https://github.com/spotdemo4/python-template/releases/tag/v${finalAttrs.version}";
+              changelog = "https://github.com/spotdemo4/python-template/releases/tag/v${final.version}";
+              downloadPage = "https://github.com/spotdemo4/python-template/releases/tag/v${final.version}";
             };
-          });
+          }
+        );
+
+        images.default = pkgs.mkImage {
+          src = self.packages.${system}.default;
         };
 
-        images = {
-          default = pkgs.mkImage self.packages.${system}.default {
-            contents = with pkgs; [ dockerTools.caCertificates ];
-          };
+        appimages.default = pkgs.mkAppImage {
+          src = self.packages.${system}.default;
         };
 
-        formatter = pkgs.nixfmt-tree;
         schemas = trev.schemas;
       }
     );
