@@ -168,8 +168,9 @@
               fileset = fileset.unions [
                 ./.python-version
                 ./pyproject.toml
-                ./uv.lock
+                ./LICENSE
                 ./README.md
+                ./uv.lock
                 ./src
               ];
             };
