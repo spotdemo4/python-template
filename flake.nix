@@ -62,6 +62,10 @@
           release = pkgs.mkShell {
             packages = with pkgs; [
               flake-release
+
+              # python
+              python314
+              uv
             ];
           };
 
