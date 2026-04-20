@@ -165,7 +165,7 @@
         packages.default = pkgs.python314Packages.buildPythonPackage (
           final: with pkgs.lib; {
             pname = "python-template";
-            version = "0.0.5";
+            version = "0.1.0";
 
             src = fileset.toSource {
               root = ./.;

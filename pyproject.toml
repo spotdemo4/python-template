@@ -1,6 +1,6 @@
 [project]
 name = "spotdemo4.python-template"
-version = "0.0.5"
+version = "0.1.0"
 description = "Python template"
 readme = "README.md"
 authors = [{ name = "spotdemo4", email = "me@trev.xyz" }]
