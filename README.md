@@ -66,7 +66,7 @@ releases are automatically created for [significant](https://www.conventionalcom
 ### uv
 
 ```elm
-uvx git+https://github.com/spotdemo4/python-template
+uvx spotdemo4.python-template
 ```
 
 ### docker

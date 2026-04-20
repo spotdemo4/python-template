@@ -89,7 +89,7 @@
         };
 
         apps = pkgs.mkApps {
-          default = "uv run python-template";
+          default = "uv run spotdemo4-python-template";
         };
 
         checks = pkgs.mkChecks {
@@ -186,8 +186,8 @@
             ];
 
             meta = {
-              mainProgram = "python-template";
-              description = "python template";
+              mainProgram = "spotdemo4-python-template";
+              description = "Python template";
               license = licenses.mit;
               platforms = platforms.all;
               homepage = "https://github.com/spotdemo4/python-template";
