@@ -48,7 +48,7 @@ nix build
 ### release
 
 ```elm
-bumper "action.yaml" "README.md"
+bumper "README.md"
 ```
 
 releases are automatically created for [significant](https://www.conventionalcommits.org/en/v1.0.0/#summary) changes

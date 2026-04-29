@@ -27,11 +27,9 @@
       ...
     }:
     trev.libs.mkFlake (
-      system: init:
-      let
-        pkgs = init.appendOverlays [ trev.overlays.python ];
-      in
-      {
+      system: pkgs: {
+
+        # nix develop [#...]
         devShells = {
           default = pkgs.mkShell {
             shellHook = pkgs.shellhook.ref;
@@ -42,14 +40,15 @@
 
               # lint
               ruff
+              nixd
 
               # format
-              nixfmt
+              treefmt
               prettier
+              nixfmt
 
               # util
               bumper
-              flake-release
             ];
           };
 
@@ -81,25 +80,90 @@
 
           vulnerable = pkgs.mkShell {
             packages = with pkgs; [
-              pysentry # python
-              flake-checker # flake
+              flake-checker # nix
               zizmor # actions
+              pysentry # python
             ];
           };
         };
 
+        # nix run [#...]
         apps = pkgs.mkApps {
           default = "uv run spotdemo4-python-template";
         };
 
-        checks = pkgs.mkChecks {
-          python = {
+        # nix build [#...]
+        packages = {
+          default = pkgs.python314Packages.buildPythonPackage (
+            final: with pkgs.lib; {
+              pname = "python-template";
+              version = "0.1.1";
+
+              src = fileset.toSource {
+                root = ./.;
+                fileset = fileset.unions [
+                  ./.python-version
+                  ./pyproject.toml
+                  ./LICENSE
+                  ./README.md
+                  ./uv.lock
+                  ./src
+                ];
+              };
+
+              pyproject = true;
+              build-system = with pkgs.python314Packages; [
+                setuptools
+                uv-build-latest
+              ];
+
+              meta = {
+                mainProgram = "spotdemo4-python-template";
+                description = "Python template";
+                license = licenses.mit;
+                platforms = platforms.all;
+                homepage = "https://github.com/spotdemo4/python-template";
+                changelog = "https://github.com/spotdemo4/python-template/releases/tag/v${final.version}";
+                downloadPage = "https://github.com/spotdemo4/python-template/releases/tag/v${final.version}";
+              };
+            }
+          );
+        };
+
+        # nix build #images.[...]
+        images = {
+          default = pkgs.mkImage {
             src = self.packages.${system}.default;
+          };
+        };
+
+        # nix build #appimages.[...]
+        appimages = {
+          default = pkgs.mkAppImage {
+            src = self.packages.${system}.default;
+          };
+        };
+
+        # nix fmt
+        formatter = pkgs.treefmt.withConfig {
+          configFile = ./treefmt.toml;
+          runtimeInputs = with pkgs; [
+            prettier
+            nixfmt
+            ruff
+          ];
+        };
+
+        # nix flake check
+        checks = pkgs.mkChecks {
+          prettier = {
+            root = ./.;
+            filter = file: file.hasExt "yaml" || file.hasExt "json" || file.hasExt "md";
             packages = with pkgs; [
-              ruff
+              prettier
             ];
-            script = ''
-              ruff check
+            forEach = ''
+              prettier --check "$file"
             '';
           };
 
@@ -114,6 +178,19 @@
             '';
           };
 
+          actions = {
+            root = ./.github/workflows;
+            filter = file: file.hasExt "yaml";
+            packages = with pkgs; [
+              action-validator
+              zizmor
+            ];
+            forEach = ''
+              action-validator "$file"
+              zizmor --offline "$file"
+            '';
+          };
+
           renovate = {
             root = ./.github;
             files = ./.github/renovate.json;
@@ -125,87 +202,16 @@
             '';
           };
 
-          actions = {
-            root = ./.;
-            files = [
-              ./action.yaml
-              ./.github/workflows
-            ];
+          python = {
+            src = self.packages.${system}.default;
             packages = with pkgs; [
-              action-validator
-              zizmor
+              ruff
             ];
-            forEach = ''
-              action-validator "$file"
-              zizmor --offline "$file"
-            '';
-          };
-
-          prettier = {
-            root = ./.;
-            filter = file: file.hasExt "yaml" || file.hasExt "json" || file.hasExt "md";
-            packages = with pkgs; [
-              prettier
-            ];
-            forEach = ''
-              prettier --check "$file"
+            script = ''
+              ruff check
             '';
           };
         };
-
-        formatter = pkgs.treefmt.withConfig {
-          configFile = ./treefmt.toml;
-          runtimeInputs = with pkgs; [
-            ruff
-            nixfmt
-            prettier
-          ];
-        };
-
-        packages.default = pkgs.python314Packages.buildPythonPackage (
-          final: with pkgs.lib; {
-            pname = "python-template";
-            version = "0.1.1";
-
-            src = fileset.toSource {
-              root = ./.;
-              fileset = fileset.unions [
-                ./.python-version
-                ./pyproject.toml
-                ./LICENSE
-                ./README.md
-                ./uv.lock
-                ./src
-              ];
-            };
-
-            pyproject = true;
-            build-system = with pkgs.python314Packages; [
-              setuptools
-              uv-build-latest
-            ];
-
-            meta = {
-              mainProgram = "spotdemo4-python-template";
-              description = "Python template";
-              license = licenses.mit;
-              platforms = platforms.all;
-              homepage = "https://github.com/spotdemo4/python-template";
-              changelog = "https://github.com/spotdemo4/python-template/releases/tag/v${final.version}";
-              downloadPage = "https://github.com/spotdemo4/python-template/releases/tag/v${final.version}";
-            };
-          }
-        );
-
-        images.default = pkgs.mkImage {
-          src = self.packages.${system}.default;
-        };
-
-        appimages.default = pkgs.mkAppImage {
-          src = self.packages.${system}.default;
-        };
-
-        schemas = trev.schemas;
       }
     );
 }
