@@ -80,9 +80,3 @@ docker run ghcr.io/spotdemo4/python-template:0.1.1
 ```elm
 nix run github:spotdemo4/python-template
 ```
-
-### action
-
-```yaml
-- uses: spotdemo4/python-template@v0.1.1
-```
