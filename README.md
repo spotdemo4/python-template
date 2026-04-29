@@ -58,9 +58,9 @@ releases are automatically created for [significant](https://www.conventionalcom
 
 | Architecture | Download                                                                                                                                           |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| amd64        | [python-template_0.1.1_amd64.AppImage](https://github.com/spotdemo4/python-template/releases/download/v0.1.1/python-template_0.1.1_amd64.AppImage) |
-| arm64        | [python-template_0.1.1_arm64.AppImage](https://github.com/spotdemo4/python-template/releases/download/v0.1.1/python-template_0.1.1_arm64.AppImage) |
-| arm          | [python-template_0.1.1_arm.AppImage](https://github.com/spotdemo4/python-template/releases/download/v0.1.1/python-template_0.1.1_arm.AppImage)     |
+| amd64        | [python-template_0.2.0_amd64.AppImage](https://github.com/spotdemo4/python-template/releases/download/v0.2.0/python-template_0.2.0_amd64.AppImage) |
+| arm64        | [python-template_0.2.0_arm64.AppImage](https://github.com/spotdemo4/python-template/releases/download/v0.2.0/python-template_0.2.0_arm64.AppImage) |
+| arm          | [python-template_0.2.0_arm.AppImage](https://github.com/spotdemo4/python-template/releases/download/v0.2.0/python-template_0.2.0_arm.AppImage)     |
 
 ### uv
 
@@ -71,7 +71,7 @@ uvx spotdemo4.python-template
 ### docker
 
 ```elm
-docker run ghcr.io/spotdemo4/python-template:0.1.1
+docker run ghcr.io/spotdemo4/python-template:0.2.0
 ```
 
 ### nix
