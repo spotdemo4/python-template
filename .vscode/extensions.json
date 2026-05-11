@@ -1,7 +1,8 @@
 {
   "recommendations": [
-    "esbenp.prettier-vscode",
+    "charliermarsh.ruff",
+    "oxc.oxc-vscode",
     "jnoortheen.nix-ide",
-    "charliermarsh.ruff"
+    "tombi-toml.tombi"
   ]
 }

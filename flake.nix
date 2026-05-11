@@ -13,8 +13,8 @@
   inputs = {
     systems.url = "github:spotdemo4/systems";
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    trev = {
-      url = "github:spotdemo4/nur";
+    trevpkgs = {
+      url = "github:spotdemo4/trevpkgs";
       inputs.systems.follows = "systems";
       inputs.nixpkgs.follows = "nixpkgs";
     };
@@ -23,10 +23,10 @@
   outputs =
     {
       self,
-      trev,
+      trevpkgs,
       ...
     }:
-    trev.libs.mkFlake (
+    trevpkgs.libs.mkFlake (
       system: pkgs: {
 
         # nix develop [#...]
@@ -41,11 +41,12 @@
               # lint
               ruff
               nixd
+              nil
 
               # format
-              treefmt
-              prettier
+              oxfmt
               nixfmt
+              treefmt
 
               # util
               bumper
@@ -80,16 +81,16 @@
 
           vulnerable = pkgs.mkShell {
             packages = with pkgs; [
+              pysentry # python
               flake-checker # nix
               zizmor # actions
-              pysentry # python
             ];
           };
         };
 
         # nix run [#...]
         apps = pkgs.mkApps {
-          default = "uv run spotdemo4-python-template";
+          dev = "uv run spotdemo4-python-template";
         };
 
         # nix build [#...]
@@ -116,6 +117,13 @@
                 setuptools
                 uv-build-latest
               ];
+
+              nativeCheckInputs = with pkgs; [
+                ruff
+              ];
+              checkPhase = ''
+                ruff check
+              '';
 
               meta = {
                 mainProgram = "spotdemo4-python-template";
@@ -148,24 +156,15 @@
         formatter = pkgs.treefmt.withConfig {
           configFile = ./treefmt.toml;
           runtimeInputs = with pkgs; [
-            prettier
-            nixfmt
             ruff
+            oxfmt
+            nixfmt
           ];
         };
 
         # nix flake check
         checks = pkgs.mkChecks {
-          prettier = {
-            root = ./.;
-            filter = file: file.hasExt "yaml" || file.hasExt "json" || file.hasExt "md";
-            packages = with pkgs; [
-              prettier
-            ];
-            forEach = ''
-              prettier --check "$file"
-            '';
-          };
+          python = self.packages.${system}.default;
 
           nix = {
             root = ./.;
@@ -173,7 +172,7 @@
             packages = with pkgs; [
               nixfmt
             ];
-            forEach = ''
+            script = ''
               nixfmt --check "$file"
             '';
           };
@@ -185,7 +184,7 @@
               action-validator
               zizmor
             ];
-            forEach = ''
+            script = ''
               action-validator "$file"
               zizmor --offline "$file"
             '';
@@ -202,13 +201,14 @@
             '';
           };
 
-          python = {
-            src = self.packages.${system}.default;
+          config = {
+            root = ./.;
+            filter = file: file.hasExt "json" || file.hasExt "yaml" || file.hasExt "toml" || file.hasExt "md";
             packages = with pkgs; [
-              ruff
+              oxfmt
             ];
             script = ''
-              ruff check
+              oxfmt --check
             '';
           };
         };
