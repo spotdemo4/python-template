@@ -5,11 +5,11 @@ command = "ruff"
 options = ["format"]
 includes = ["*.py"]
 
-[formatter.oxfmt]
-command = "oxfmt"
-options = ["--write"]
-includes = ["*.ts", "*.tsx", "*.html", "*.css", "*.json", "*.yaml", "*.toml", "*.md"]
-
 [formatter.nixfmt]
 command = "nixfmt"
 includes = ["*.nix"]
+
+[formatter.oxfmt]
+command = "oxfmt"
+options = ["--write"]
+includes = ["*.json", "*.yaml", "*.toml", "*.md"]
