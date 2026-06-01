@@ -36,3 +36,6 @@ jobs:
             images.x86_64-linux.default.x86_64-unknown-linux-gnu
             images.x86_64-linux.default.aarch64-unknown-linux-gnu
             images.x86_64-linux.default.armv7l-unknown-linux-gnueabihf
+
+      - name: Release to PyPI
+        run: uv build && uv publish --index forgejo

@@ -19,6 +19,12 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = "spotdemo4.python_template"
 
+[[tool.uv.index]]
+name = "forgejo"
+url = "https://trev.zip/api/packages/template/pypi"
+publish-url = "https://trev.zip/api/packages/template/pypi"
+explicit = true
+
 [tool.basedpyright]
 typeCheckingMode = "recommended"
 failOnWarnings = true
