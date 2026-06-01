@@ -15,66 +15,62 @@ part of [spotdemo4/templates](https://github.com/spotdemo4/templates)
 
 ## getting started
 
-```elm
+```sh
 nix develop
 ```
 
 ### run
 
-```elm
+```sh
 nix run #dev
 ```
 
 ### format
 
-```elm
+```sh
 nix fmt
 ```
 
 ### check
 
-```elm
+```sh
 nix flake check
 ```
 
 ### build
 
-```elm
+```sh
 nix build
 ```
 
 ### release
 
-```elm
-bumper "README.md"
+```sh
+bumper
 ```
 
 releases are automatically created for [significant](https://www.conventionalcommits.org/en/v1.0.0/#summary) changes
 
 ## use
 
-### download
-
-| Architecture | Download                                                                                                                                           |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| amd64        | [python-template_0.3.0_amd64.AppImage](https://github.com/spotdemo4/python-template/releases/download/v0.3.0/python-template_0.3.0_amd64.AppImage) |
-| arm64        | [python-template_0.3.0_arm64.AppImage](https://github.com/spotdemo4/python-template/releases/download/v0.3.0/python-template_0.3.0_arm64.AppImage) |
-| arm          | [python-template_0.3.0_arm.AppImage](https://github.com/spotdemo4/python-template/releases/download/v0.3.0/python-template_0.3.0_arm.AppImage)     |
-
 ### uv
 
-```elm
+```sh
 uvx spotdemo4.python-template
 ```
 
 ### docker
 
-```elm
+```sh
 docker run ghcr.io/spotdemo4/python-template:0.3.0
 ```
 
 ### nix
 
-```elm
+```sh
 nix run github:spotdemo4/python-template
 ```
+
+### download
+
+https://trev.zip/template/python/releases
