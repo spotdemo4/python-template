@@ -133,9 +133,9 @@
                 description = "python template";
                 license = licenses.mit;
                 platforms = platforms.all;
-                homepage = "https://github.com/spotdemo4/python-template";
-                changelog = "https://github.com/spotdemo4/python-template/releases/tag/v${final.version}";
-                downloadPage = "https://github.com/spotdemo4/python-template/releases/tag/v${final.version}";
+                homepage = "https://trev.zip/template/python";
+                changelog = "https://trev.zip/template/python/releases";
+                downloadPage = "https://trev.zip/template/python/releases/tag/v${final.version}";
               };
             }
           );
