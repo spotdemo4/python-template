@@ -55,7 +55,7 @@ releases are automatically created for [significant](https://www.conventionalcom
 ### uv
 
 ```sh
-uvx spotdemo4.python-template \
+uvx spotdemo4-python-template \
   --index https://trev.zip/api/packages/template/pypi
 ```
 
