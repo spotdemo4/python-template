@@ -38,4 +38,7 @@ jobs:
             images.x86_64-linux.default.armv7l-unknown-linux-gnueabihf
 
       - name: Release to PyPI
-        run: uv build && uv publish --index forgejo
+        run: uv build && uv publish --index forgejo # zizmor: ignore[use-trusted-publishing]
+        env:
+          UV_PUBLISH_USERNAME: trev
+          UV_PUBLISH_PASSWORD: ${{ secrets.PACKAGE_TOKEN }}
