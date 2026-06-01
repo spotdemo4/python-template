@@ -40,6 +40,7 @@
 
               # lint
               ruff
+              basedpyright
               nixd
               nil
 
@@ -120,14 +121,16 @@
 
               nativeCheckInputs = with pkgs; [
                 ruff
+                basedpyright
               ];
               checkPhase = ''
                 ruff check
+                basedpyright
               '';
 
               meta = {
                 mainProgram = "spotdemo4-python-template";
-                description = "Python template";
+                description = "python template";
                 license = licenses.mit;
                 platforms = platforms.all;
                 homepage = "https://github.com/spotdemo4/python-template";

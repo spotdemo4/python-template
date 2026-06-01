@@ -1,7 +1,7 @@
 [project]
 name = "spotdemo4.python-template"
 version = "0.3.0"
-description = "Python template"
+description = "python template"
 readme = "README.md"
 authors = [{ name = "spotdemo4", email = "me@trev.xyz" }]
 license = "MIT"
@@ -15,3 +15,7 @@ spotdemo4-python-template = "spotdemo4_python_template:main"
 [build-system]
 requires = ["uv_build>=0.11.0,<0.12.0"]
 build-backend = "uv_build"
+
+[tool.basedpyright]
+typeCheckingMode = "recommended"
+failOnWarnings = true
