@@ -1,5 +1,5 @@
 [project]
-name = "spotdemo4.python-template"
+name = "python-template"
 version = "0.3.1"
 description = "python template"
 readme = "README.md"
@@ -10,14 +10,14 @@ requires-python = ">=3.14"
 dependencies = []
 
 [project.scripts]
-spotdemo4-python-template = "spotdemo4.python_template:main"
+python-template = "python_template:main"
 
 [build-system]
 requires = ["uv_build>=0.11.0,<0.12.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = "spotdemo4.python_template"
+module-name = "python_template"
 
 [[tool.uv.index]]
 name = "forgejo"

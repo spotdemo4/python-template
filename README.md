@@ -55,14 +55,14 @@ releases are automatically created for [significant](https://www.conventionalcom
 ### uv
 
 ```sh
-uvx spotdemo4-python-template \
+uvx python-template \
   --index https://trev.zip/api/packages/template/pypi
 ```
 
 ### pip
 
 ```sh
-pip install spotdemo4-python-template \
+pip install python-template \
     --index-url https://trev.zip/api/packages/template/pypi/simple
 ```
 

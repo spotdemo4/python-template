@@ -91,7 +91,7 @@
 
         # nix run [#...]
         apps = pkgs.mkApps {
-          dev = "uv run spotdemo4-python-template";
+          dev = "uv run python-template";
         };
 
         # nix build [#...]
@@ -129,7 +129,7 @@
               '';
 
               meta = {
-                mainProgram = "spotdemo4-python-template";
+                mainProgram = "python-template";
                 description = "python template";
                 license = licenses.mit;
                 platforms = platforms.all;
