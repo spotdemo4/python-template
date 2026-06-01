@@ -40,5 +40,5 @@ jobs:
       - name: Release to PyPI
         run: uv build && uv publish --index forgejo # zizmor: ignore[use-trusted-publishing]
         env:
-          UV_PUBLISH_USERNAME: trev
+          UV_PUBLISH_USERNAME: ${{ forgejo.ACTOR }}
           UV_PUBLISH_PASSWORD: ${{ secrets.PACKAGE_TOKEN }}
