@@ -99,7 +99,7 @@
           default = pkgs.python314Packages.buildPythonPackage (
             final: with pkgs.lib; {
               pname = "python-template";
-              version = "1.0.0";
+              version = "1.1.0";
 
               src = fileset.toSource {
                 root = ./.;
