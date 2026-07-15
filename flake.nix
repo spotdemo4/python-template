@@ -91,7 +91,13 @@
 
         # nix run [#...]
         apps = pkgs.mkApps {
-          dev = "uv run python-template";
+          dev = {
+            script = "uv run python-template";
+            packages = with pkgs; [
+              python314
+              uv
+            ];
+          };
         };
 
         # nix build [#...]
