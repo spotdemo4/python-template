@@ -1,8 +1,10 @@
 {
   "recommendations": [
     "charliermarsh.ruff",
+    "detachhead.basedpyright",
     "oxc.oxc-vscode",
     "jnoortheen.nix-ide",
+    "redhat.vscode-yaml",
     "tombi-toml.tombi"
   ]
 }

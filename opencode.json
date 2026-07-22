@@ -11,6 +11,20 @@
     "ruff": {
       "command": ["ruff", "server"],
       "extensions": [".py", ".pyi"]
+    },
+    "json-ls": {
+      "command": ["vscode-json-languageserver", "--stdio"],
+      "extensions": [".json", ".jsonc"]
+    },
+    "yaml-ls": {
+      "command": ["yaml-language-server", "--stdio"]
+    },
+    "tombi": {
+      "command": ["tombi", "lsp"],
+      "extensions": [".toml"]
+    },
+    "nixd": {
+      "command": ["nixd"]
     }
   }
 }

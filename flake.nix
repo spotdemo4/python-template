@@ -37,19 +37,21 @@
               # python
               python314
               uv
-
-              # lint
               ruff
               basedpyright
+
+              vscode-json-languageserver # json
+              yaml-language-server # yaml
+              tombi # toml
+              oxfmt # format
+
+              # nix
               nixd
               nil
-
-              # format
-              oxfmt
               nixfmt
-              treefmt
 
               # util
+              treefmt
               bumper
             ];
           };
