@@ -22,18 +22,22 @@ nix develop
 ### run
 
 > [!IMPORTANT]
-> when using a nix development shell do not use `uv run`.
+> when using a nix development shell do not use `uv run`
 >
-> `uv run` makes `uv` provision its own virtual environment.
+> `uv run` makes `uv` provision its own virtual environment
 >
-> all python scripts (including your own [entry points](https://peps.python.org/pep-0621/#entry-points)) are available in the nix development shell.
+> all python scripts (including your own [entry points](https://peps.python.org/pep-0621/#entry-points)) are available in the nix development shell
+
+run a python script
 
 ```sh
-python-template # run a python script
+python-template
 ```
 
+run the nix package
+
 ```sh
-nix run # run the nix package
+nix run
 ```
 
 ### format
