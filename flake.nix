@@ -18,27 +18,74 @@
       inputs.systems.follows = "systems";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    pyproject-nix = {
+      url = "github:pyproject-nix/pyproject.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    uv2nix = {
+      url = "github:pyproject-nix/uv2nix";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    pyproject-build-systems = {
+      url = "github:pyproject-nix/build-system-pkgs";
+      inputs.pyproject-nix.follows = "pyproject-nix";
+      inputs.uv2nix.follows = "uv2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
     {
       self,
       trevpkgs,
+      pyproject-nix,
+      uv2nix,
+      pyproject-build-systems,
       ...
     }:
+    let
+      workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
+      pyprojectOverlay = workspace.mkPyprojectOverlay {
+        sourcePreference = "wheel";
+      };
+      editableOverlay = workspace.mkEditablePyprojectOverlay {
+        root = "$REPO_ROOT";
+      };
+    in
     trevpkgs.libs.mkFlake (
-      system: pkgs: {
-
+      system: pkgs:
+      let
+        python = pkgs.python314;
+        pythonSet = (pkgs.callPackage pyproject-nix.build.packages { inherit python; }).overrideScope (
+          pkgs.lib.composeManyExtensions [
+            pyproject-build-systems.overlays.wheel
+            pyprojectOverlay
+          ]
+        );
+        editablePythonSet = pythonSet.overrideScope editableOverlay;
+        developmentVirtualenv = editablePythonSet.mkVirtualEnv "python-template-dev-env" workspace.deps.all;
+      in
+      {
         # nix develop [#...]
         devShells = {
           default = pkgs.mkShell {
-            shellHook = pkgs.shellhook.ref;
+            shellHook = ''
+              ${pkgs.shellhook.ref}
+              unset PYTHONPATH
+              export REPO_ROOT=$(git rev-parse --show-toplevel)
+            '';
+            env = {
+              UV_NO_SYNC = "1";
+              UV_PYTHON = editablePythonSet.python.interpreter;
+              UV_PYTHON_DOWNLOADS = "never";
+              UV_PROJECT_ENVIRONMENT = developmentVirtualenv;
+              VIRTUAL_ENV = developmentVirtualenv;
+            };
             packages = with pkgs; [
               # python
-              python314
+              developmentVirtualenv
               uv
-              ruff
-              basedpyright
 
               vscode-json-languageserver # json
               yaml-language-server # yaml
@@ -67,7 +114,7 @@
               flake-release
 
               # python
-              python314
+              python
               uv
             ];
           };
@@ -77,7 +124,7 @@
               renovate
 
               # python
-              python314
+              python
               uv
             ];
           };
@@ -91,63 +138,29 @@
           };
         };
 
-        # nix run [#...]
-        apps = pkgs.mkApps {
-          dev = {
-            script = "uv run python-template";
-            packages = with pkgs; [
-              python314
-              uv
-            ];
-          };
-        };
-
         # nix build [#...]
-        packages = {
-          default = pkgs.python314Packages.buildPythonPackage (
-            final: with pkgs.lib; {
-              pname = "python-template";
-              version = "1.1.0";
-
-              src = fileset.toSource {
-                root = ./.;
-                fileset = fileset.unions [
-                  ./.python-version
-                  ./pyproject.toml
-                  ./LICENSE
-                  ./README.md
-                  ./uv.lock
-                  ./src
-                ];
-              };
-
-              pyproject = true;
-              build-system = with pkgs.python314Packages; [
-                setuptools
-                uv-build-latest
-              ];
-
-              nativeCheckInputs = with pkgs; [
-                ruff
-                basedpyright
-              ];
-              checkPhase = ''
-                ruff check
-                basedpyright
-              '';
-
-              meta = {
-                mainProgram = "python-template";
-                description = "python template";
-                license = licenses.mit;
-                platforms = platforms.all;
-                homepage = "https://trev.zip/template/python";
-                changelog = "https://trev.zip/template/python/releases";
-                downloadPage = "https://trev.zip/template/python/releases/tag/v${final.version}";
-              };
-            }
-          );
-        };
+        packages =
+          let
+            inherit (pkgs.callPackages pyproject-nix.build.util { }) mkApplication;
+          in
+          {
+            default =
+              (mkApplication {
+                venv = pythonSet.mkVirtualEnv "python-template-env" workspace.deps.default;
+                package = pythonSet.python-template;
+              }).overrideAttrs
+                (old: {
+                  meta = (old.meta or { }) // {
+                    mainProgram = "python-template";
+                    description = "python template";
+                    license = pkgs.lib.licenses.mit;
+                    platforms = pkgs.lib.platforms.all;
+                    homepage = "https://trev.zip/template/python";
+                    changelog = "https://trev.zip/template/python/releases";
+                    downloadPage = "https://trev.zip/template/python/releases/tag/v${pythonSet.python-template.version}";
+                  };
+                });
+          };
 
         # nix build #images.[...]
         images = {
@@ -167,7 +180,7 @@
         formatter = pkgs.treefmt.withConfig {
           configFile = ./treefmt.toml;
           runtimeInputs = with pkgs; [
-            ruff
+            developmentVirtualenv
             oxfmt
             nixfmt
           ];
@@ -175,7 +188,22 @@
 
         # nix flake check
         checks = pkgs.mkChecks {
-          python = self.packages.${system}.default;
+          package = self.packages.${system}.default;
+
+          python = {
+            root = ./.;
+            filter = file: file.hasExt "py";
+            include = [
+              ./.python-version
+              ./pyproject.toml
+              ./uv.lock
+            ];
+            packages = [ developmentVirtualenv ];
+            script = ''
+              ruff check
+              basedpyright
+            '';
+          };
 
           nix = {
             root = ./.;

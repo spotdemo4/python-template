@@ -28,3 +28,6 @@ explicit = true
 [tool.basedpyright]
 typeCheckingMode = "recommended"
 failOnWarnings = true
+
+[dependency-groups]
+dev = ["basedpyright>=1.39.9", "ruff>=0.16.0"]
