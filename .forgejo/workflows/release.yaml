@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Initialize
-        uses: spotdemo4/nix-init@6fc824c802d17c270315eb3c671500398d5ca7c0 # v1.60.1
+        uses: spotdemo4/nix-init@7b3c73a036788c813cef96f63cd32e622ba616f0 # v1.61.0
         with:
           token: ${{ secrets.DOCTOR_TOKEN }}
           github_token: ${{ secrets.GH_TOKEN }}
