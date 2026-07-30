@@ -32,12 +32,6 @@ run a python script
 python-template
 ```
 
-run the nix package
-
-```sh
-nix run
-```
-
 ### format
 
 ```sh
