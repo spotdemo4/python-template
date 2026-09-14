@@ -149,6 +149,12 @@
                 package = pythonSet.python-template;
               }).overrideAttrs
                 (old: {
+                  installCheckPhase = ''
+                    runHook preInstallCheck
+                    test "$("$out/bin/python-template")" = "Hello, world!"
+                    runHook postInstallCheck
+                  '';
+
                   meta = (old.meta or { }) // {
                     mainProgram = "python-template";
                     description = "python template";
