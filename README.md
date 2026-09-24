@@ -56,7 +56,7 @@ nix build
 bumper
 ```
 
-releases are automatically created for [significant](https://www.conventionalcommits.org/en/v1.4.0/#summary) changes
+releases are automatically created for [significant](https://www.conventionalcommits.org/en/v1.4.1/#summary) changes
 
 ## use
 
