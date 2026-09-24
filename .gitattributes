@@ -1,6 +1,9 @@
 # Python template - Git attributes
 # https://git-scm.com/docs/gitattributes
 
+# Linguist: exclude template initializer from language stats
+/init.sh -linguist-detectable
+
 # Linguist: Python lock files are generated
 flake.lock linguist-generated=true
 uv.lock linguist-generated=true
