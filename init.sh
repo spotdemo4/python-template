@@ -182,9 +182,12 @@ old_description='python template'
 old_url=https://trev.zip/template/python
 replace_literal "$old_slug" "$slug" pyproject.toml uv.lock flake.nix
 replace_literal "$old_module" "$module" pyproject.toml
-replace_literal '1.0.0' "$version" pyproject.toml uv.lock flake.nix
+sed -i -E "/^\[project\]$/,/^\[/s@^(version = \")[^\"]*@\1$version@" pyproject.toml
+sed -i -E "/^name = \"$slug\"$/,/^\[/s@^(version = \")[^\"]*@\1$version@" uv.lock
 if [[ -d src/$old_module && $old_module != "$module" ]]; then
   mv "src/$old_module" "src/$module"
+  # Make the renamed sources visible to the Git-backed flake used by nix fmt.
+  git add -N -- "src/$module"
 fi
 replace_literal "$old_description" "$nix_description" flake.nix
 replace_literal "$old_url" "$web_url" flake.nix
