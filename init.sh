@@ -180,7 +180,7 @@ old_slug=python-template
 old_module=python_template
 old_description='python template'
 old_url=https://trev.zip/template/python
-replace_literal "$old_slug" "$slug" pyproject.toml uv.lock flake.nix
+replace_literal "$old_slug" "$slug" pyproject.toml uv.lock flake.nix CONTRIBUTING.md
 replace_literal "$old_module" "$module" pyproject.toml
 sed -i -E "/^\[project\]$/,/^\[/s@^(version = \")[^\"]*@\1$version@" pyproject.toml
 sed -i -E "/^name = \"$slug\"$/,/^\[/s@^(version = \")[^\"]*@\1$version@" uv.lock
@@ -214,10 +214,28 @@ encoded_lock_url=${encoded_lock_url//\//%252F}
 nixpkgs_badge="[![nixpkgs](https://img.shields.io/endpoint?url=https%3A%2F%2Fnix-shield.trev.zip%2Fbadge%3Furl%3D${encoded_lock_url}%26input%3Dnixpkgs&logoColor=%23bac2de&labelColor=%23313244&color=%235277C3)](https://nixos.org/)"
 language_badge="[![python](<https://img.shields.io/badge/dynamic/regex?url=${raw_url}/.python-version&search=(.*)&logo=python&logoColor=%23bac2de&label=version&labelColor=%23313244&color=%23306998>)](https://www.python.org/downloads/)"
 
+readme_sections=$(sed -n '/^## using$/,$p' README.md)
+readme_sections=${readme_sections//"$old_url"/"$web_url"}
+old_uv_command=$'uvx python-template \\\n  --index https://trev.zip/api/packages/template/pypi'
+old_pip_command=$'pip install python-template \\\n    --index-url https://trev.zip/api/packages/template/pypi/simple'
+if $is_github; then
+  uv_command="uvx --from git+$web_url.git $slug"
+  pip_command="pip install git+$web_url.git"
+  image="ghcr.io/${repo_path,,}:latest"
+else
+  registry_url="${web_url%/$repo_path}/api/packages/$owner/pypi"
+  uv_command=$'uvx '"$slug"$' \\\n  --index '"$registry_url"
+  pip_command=$'pip install '"$slug"$' \\\n    --index-url '"$registry_url/simple"
+  image="$host/${repo_path,,}:latest"
+fi
+readme_sections=${readme_sections//"$old_uv_command"/"$uv_command"}
+readme_sections=${readme_sections//"$old_pip_command"/"$pip_command"}
+readme_sections=${readme_sections//trev.zip\/template\/python:latest/"$image"}
+
 {
   printf '# %s\n\n' "$title"
   printf '%s\n%s\n%s\n%s\n\n' "$check_badge" "$vulnerable_badge" "$nixpkgs_badge" "$language_badge"
-  printf '%s\n' "$description"
+  printf '%s\n\n%s\n' "$description" "$readme_sections"
 } >README.md
 
 remove_checks() {

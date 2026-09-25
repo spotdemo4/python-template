@@ -7,59 +7,15 @@
 
 template for starting [python](https://www.python.org/) projects
 
-part of [spotdemo4/templates](https://github.com/spotdemo4/templates)
-
-## requirements
-
-- [nix](https://nixos.org/)
-
-## getting started
+to initialize a new project, run:
 
 ```sh
-nix develop
 ./init.sh "Title" "Description"
 ```
 
-### run
+part of [spotdemo4/templates](https://github.com/spotdemo4/templates)
 
-> [!IMPORTANT]
-> when using a nix development shell do not use `uv run`, `uv run` makes `uv` provision its own virtual environment
->
-> all python scripts (including your own [entry points](https://peps.python.org/pep-0621/#entry-points)) are available in the nix development shell
-
-run a python script
-
-```sh
-python-template
-```
-
-### format
-
-```sh
-nix fmt
-```
-
-### check
-
-```sh
-nix flake check
-```
-
-### build
-
-```sh
-nix build
-```
-
-### release
-
-```sh
-bumper
-```
-
-releases are automatically created for [significant](https://www.conventionalcommits.org/en/v1.4.1/#summary) changes
-
-## use
+## using
 
 ### uv
 
@@ -90,3 +46,7 @@ nix run git+https://trev.zip/template/python.git
 ### download
 
 https://trev.zip/template/python/releases
+
+## contributing
+
+see [CONTRIBUTING.md](CONTRIBUTING.md) for requirements and getting started
