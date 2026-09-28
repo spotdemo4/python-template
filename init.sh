@@ -332,8 +332,6 @@ if $is_github; then
       secondary_owner=${secondary_repo_path%%/*}
       replace_literal 'template/python' "$secondary_repo_path" .forgejo/renovate.json
       replace_literal 'https://trev.zip/api/v1' "${secondary_web_url%/$secondary_repo_path}/api/v1" .forgejo/renovate.json
-      replace_literal 'REGISTRY: trev.zip' "REGISTRY: $secondary_host" .forgejo/workflows/release.yaml
-      replace_literal '//trev.zip/api/packages' "//$secondary_host/api/packages" .forgejo/workflows/release.yaml
       replace_literal 'https://trev.zip/api/packages/template/pypi' "${secondary_web_url%/$secondary_repo_path}/api/packages/$secondary_owner/pypi" pyproject.toml
     fi
   else
@@ -343,8 +341,6 @@ else
   if [[ -f .forgejo/renovate.json ]]; then
     replace_literal 'template/python' "$repo_path" .forgejo/renovate.json
     replace_literal 'https://trev.zip/api/v1' "${web_url%/$repo_path}/api/v1" .forgejo/renovate.json
-    replace_literal 'REGISTRY: trev.zip' "REGISTRY: $host" .forgejo/workflows/release.yaml
-    replace_literal '//trev.zip/api/packages' "//$host/api/packages" .forgejo/workflows/release.yaml
     replace_literal 'https://trev.zip/api/packages/template/pypi' "${web_url%/$repo_path}/api/packages/$owner/pypi" pyproject.toml
   fi
   if [[ -d .github ]]; then
