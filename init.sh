@@ -245,10 +245,6 @@ remove_checks() {
   done
 }
 
-remove_forgejo_index() {
-  sed -i '/^\[\[tool\.uv\.index\]\]$/,/^explicit = true$/d' pyproject.toml
-}
-
 read_secondary_repository() {
   local provider=$1 input remote_path authority secondary_provider_host scheme
   read -r -p "$provider repository URL: " input
@@ -325,23 +321,17 @@ if $is_github; then
     if [[ $reply =~ ^[Yy]$ ]]; then
       rm -rf .forgejo
       remove_checks actions-fj renovate-fj
-      remove_forgejo_index
     else
       read_secondary_repository Forgejo
       "${new_git[@]}" remote add forgejo "$secondary_remote"
-      secondary_owner=${secondary_repo_path%%/*}
       replace_literal 'template/python' "$secondary_repo_path" .forgejo/renovate.json
       replace_literal 'https://trev.zip/api/v1' "${secondary_web_url%/$secondary_repo_path}/api/v1" .forgejo/renovate.json
-      replace_literal 'https://trev.zip/api/packages/template/pypi' "${secondary_web_url%/$secondary_repo_path}/api/packages/$secondary_owner/pypi" pyproject.toml
     fi
-  else
-    remove_forgejo_index
   fi
 else
   if [[ -f .forgejo/renovate.json ]]; then
     replace_literal 'template/python' "$repo_path" .forgejo/renovate.json
     replace_literal 'https://trev.zip/api/v1' "${web_url%/$repo_path}/api/v1" .forgejo/renovate.json
-    replace_literal 'https://trev.zip/api/packages/template/pypi' "${web_url%/$repo_path}/api/packages/$owner/pypi" pyproject.toml
   fi
   if [[ -d .github ]]; then
     read -r -p 'Non-GitHub origin detected. Delete .github? [y/N] ' reply || reply=
