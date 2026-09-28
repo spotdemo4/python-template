@@ -18,53 +18,31 @@
       inputs.systems.follows = "systems";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    pyproject-nix = {
-      url = "github:pyproject-nix/pyproject.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    uv2nix = {
-      url = "github:pyproject-nix/uv2nix";
-      inputs.pyproject-nix.follows = "pyproject-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    pyproject-build-systems = {
-      url = "github:pyproject-nix/build-system-pkgs";
-      inputs.pyproject-nix.follows = "pyproject-nix";
-      inputs.uv2nix.follows = "uv2nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
     {
       self,
       trevpkgs,
-      pyproject-nix,
-      uv2nix,
-      pyproject-build-systems,
       ...
     }:
     let
-      workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
-      pyprojectOverlay = workspace.mkPyprojectOverlay {
-        sourcePreference = "wheel";
-      };
-      editableOverlay = workspace.mkEditablePyprojectOverlay {
-        root = "$REPO_ROOT";
-      };
+      inherit (fromTOML (builtins.readFile ./pyproject.toml)) project;
     in
     trevpkgs.libs.mkFlake (
       system: pkgs:
       let
         python = pkgs.python314;
-        pythonSet = (pkgs.callPackage pyproject-nix.build.packages { inherit python; }).overrideScope (
-          pkgs.lib.composeManyExtensions [
-            pyproject-build-systems.overlays.wheel
-            pyprojectOverlay
-          ]
-        );
-        editablePythonSet = pythonSet.overrideScope editableOverlay;
-        developmentVirtualenv = editablePythonSet.mkVirtualEnv "python-template-dev-env" workspace.deps.all;
+        dependencies = with python.pkgs; [ ];
+
+        # editable install of this project for development
+        editable = python.pkgs.mkPythonEditablePackage {
+          pname = project.name;
+          inherit (project) version scripts;
+          inherit dependencies;
+          root = "$REPO_ROOT/src";
+        };
+        pythonEnv = python.withPackages (_: [ editable ]);
       in
       {
         # nix develop [#...]
@@ -76,16 +54,15 @@
               export REPO_ROOT=$(git rev-parse --show-toplevel)
             '';
             env = {
-              UV_NO_SYNC = "1";
-              UV_PYTHON = editablePythonSet.python.interpreter;
+              UV_PYTHON = python.interpreter;
               UV_PYTHON_DOWNLOADS = "never";
-              UV_PROJECT_ENVIRONMENT = developmentVirtualenv;
-              VIRTUAL_ENV = developmentVirtualenv;
             };
             packages = with pkgs; [
               # python
-              developmentVirtualenv
+              pythonEnv
               uv
+              ruff
+              basedpyright
 
               vscode-json-languageserver # json
               yaml-language-server # yaml
@@ -138,34 +115,47 @@
         };
 
         # nix build [#...]
-        packages =
-          let
-            inherit (pkgs.callPackages pyproject-nix.build.util { }) mkApplication;
-          in
-          {
-            default =
-              (mkApplication {
-                venv = pythonSet.mkVirtualEnv "python-template-env" workspace.deps.default;
-                package = pythonSet.python-template;
-              }).overrideAttrs
-                (old: {
-                  installCheckPhase = ''
-                    runHook preInstallCheck
-                    test "$("$out/bin/python-template")" = "Hello, world!"
-                    runHook postInstallCheck
-                  '';
+        packages = {
+          default = python.pkgs.buildPythonPackage (
+            final: with pkgs.lib; {
+              pname = project.name;
+              inherit (project) version;
 
-                  meta = (old.meta or { }) // {
-                    mainProgram = "python-template";
-                    description = "python template";
-                    license = pkgs.lib.licenses.mit;
-                    platforms = pkgs.lib.platforms.all;
-                    homepage = "https://trev.zip/template/python";
-                    changelog = "https://trev.zip/template/python/releases";
-                    downloadPage = "https://trev.zip/template/python/releases/tag/v${pythonSet.python-template.version}";
-                  };
-                });
-          };
+              src = fileset.toSource {
+                root = ./.;
+                fileset = fileset.unions [
+                  ./pyproject.toml
+                  ./LICENSE
+                  ./README.md
+                  ./src
+                ];
+              };
+
+              pyproject = true;
+              build-system = with python.pkgs; [
+                uv-build-latest
+              ];
+              inherit dependencies;
+
+              pythonImportsCheck = [ "python_template" ];
+              checkPhase = ''
+                runHook preCheck
+                test "$("$out/bin/python-template")" = "Hello, world!"
+                runHook postCheck
+              '';
+
+              meta = {
+                mainProgram = "python-template";
+                description = "python template";
+                license = licenses.mit;
+                platforms = platforms.all;
+                homepage = "https://trev.zip/template/python";
+                changelog = "https://trev.zip/template/python/releases";
+                downloadPage = "https://trev.zip/template/python/releases/tag/v${final.version}";
+              };
+            }
+          );
+        };
 
         # nix build #images.[...]
         images = {
@@ -185,7 +175,7 @@
         formatter = pkgs.treefmt.withConfig {
           configFile = ./treefmt.toml;
           runtimeInputs = with pkgs; [
-            developmentVirtualenv
+            ruff
             oxfmt
             nixfmt
           ];
@@ -203,7 +193,11 @@
               ./pyproject.toml
               ./uv.lock
             ];
-            packages = [ developmentVirtualenv ];
+            packages = with pkgs; [
+              pythonEnv
+              ruff
+              basedpyright
+            ];
             script = ''
               ruff check
               basedpyright
