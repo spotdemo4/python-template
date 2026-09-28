@@ -19,6 +19,5 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = "python_template"
 
-[tool.basedpyright]
-typeCheckingMode = "recommended"
-failOnWarnings = true
+[tool.pyright]
+typeCheckingMode = "strict"

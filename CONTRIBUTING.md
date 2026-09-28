@@ -54,11 +54,11 @@ ruff format .
 nix flake check
 ```
 
-with [ruff](https://docs.astral.sh/ruff/) and [basedpyright](https://docs.basedpyright.com/):
+with [ruff](https://docs.astral.sh/ruff/) and [pyright](https://microsoft.github.io/pyright/):
 
 ```sh
 ruff check
-basedpyright
+pyright --warnings
 ```
 
 ### build

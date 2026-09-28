@@ -20,8 +20,8 @@
     "https://models.dev/": true
   },
 
-  // detachhead.basedpyright
-  "basedpyright.disableLanguageServices": false,
+  // ms-pyright.pyright
+  "pyright.disableLanguageServices": false,
 
   // charliermarsh.ruff
   "ruff.enable": true,

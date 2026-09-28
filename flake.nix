@@ -62,7 +62,7 @@
               pythonEnv
               uv
               ruff
-              basedpyright
+              pyright
 
               vscode-json-languageserver # json
               yaml-language-server # yaml
@@ -196,11 +196,11 @@
             packages = with pkgs; [
               pythonEnv
               ruff
-              basedpyright
+              pyright
             ];
             script = ''
               ruff check
-              basedpyright
+              pyright --warnings
             '';
           };
 

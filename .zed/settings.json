@@ -29,7 +29,7 @@
   "languages": {
     "Python": {
       "format_on_save": "on",
-      "language_servers": ["basedpyright", "ruff"],
+      "language_servers": ["pyright", "ruff"],
       "formatter": [{ "language_server": { "name": "ruff" } }]
     },
     "JSON": {
