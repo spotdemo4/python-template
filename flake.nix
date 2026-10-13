@@ -131,6 +131,8 @@
               build-system = with python.pkgs; [
                 uv-build-latest
               ];
+              # uv-build-latest and the pyproject.toml bound update separately
+              pypaBuildFlags = [ "--skip-dependency-check" ];
               inherit dependencies;
 
               pythonImportsCheck = [ "python_template" ];
