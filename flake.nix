@@ -202,7 +202,7 @@
         checks = pkgs.mkChecks {
           package = self.packages.${system}.default;
 
-          python = {
+          python-lint = {
             root = ./.;
             filter = file: file.hasExt "py";
             include = [
