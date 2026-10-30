@@ -136,6 +136,7 @@
               inherit dependencies;
 
               pythonImportsCheck = [ "python_template" ];
+              doCheck = true;
               checkPhase = ''
                 runHook preCheck
                 test "$("$out/bin/python-template")" = "Hello, world!"
