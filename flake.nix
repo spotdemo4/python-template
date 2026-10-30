@@ -148,8 +148,10 @@
                 license = licenses.mit;
                 platforms = platforms.all;
                 homepage = "https://trev.zip/template/python";
-                changelog = "https://trev.zip/template/python/releases";
-                downloadPage = "https://trev.zip/template/python/releases/tag/v${final.version}";
+                downloadPage = "https://trev.zip/template/python/releases";
+                changelog = "https://trev.zip/template/python/releases/tag/v${final.version}";
+                sourceProvenance = [ sourceTypes.fromSource ];
+                maintainers = [ maintainers.spotdemo4 ];
               };
             }
           );
