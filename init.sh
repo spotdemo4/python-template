@@ -81,6 +81,13 @@ if [[ ! $slug =~ ^[a-z][a-z0-9-]*$ ]]; then
   exit 1
 fi
 module=${slug//-/_}
+# Python module names can't be keywords
+case $module in
+  and | as | assert | async | await | break | class | continue | def | del | elif | else | except | finally | for | from | global | if | import | in | is | lambda | nonlocal | not | or | pass | raise | return | try | while | with | yield)
+    printf 'Title must produce a Python module name that is not a keyword.\n' >&2
+    exit 1
+    ;;
+esac
 
 remote=$(git remote get-url origin 2>/dev/null) || {
   printf 'Unable to read the origin remote.\n' >&2
@@ -212,12 +219,23 @@ if GIT_TERMINAL_PROMPT=0 git fetch --quiet --no-tags "$old_url" main 2>/dev/null
   done < <(git log --format='%T' HEAD)
 fi
 
+read -r -p 'Is this project a library? [y/N] ' reply || reply=
+if [[ $reply =~ ^[Yy]([Ee][Ss])?$ ]]; then
+  is_library=true
+else
+  is_library=false
+fi
+
 changes_started=true
 rm template.schema.json
 sed -i '/^        # nix flake init /,/^        };$/d' flake.nix
 if [[ -n $template_commit ]]; then
-  printf '{ "$schema": "%s", "url": "%s", "commit": "%s" }\n' \
-    "$old_url/raw/branch/main/template.schema.json" "$old_url" "$template_commit" >.template.json
+  library_field=
+  if $is_library; then
+    library_field=', "library": true'
+  fi
+  printf '{ "$schema": "%s", "url": "%s", "commit": "%s"%s }\n' \
+    "$old_url/raw/branch/main/template.schema.json" "$old_url" "$template_commit" "$library_field" >.template.json
 else
   printf 'Warning: unable to find the template commit; .template.json was not created.\n' >&2
 fi
@@ -237,6 +255,71 @@ replace_literal "$old_description" "$escaped_description" pyproject.toml
 replace_literal 'authors = [{ name = "spotdemo4", email = "me@trev.xyz" }]' "authors = [{ name = \"$escaped_git_name\", email = \"$escaped_git_email\" }]" pyproject.toml
 replace_literal 'Copyright (c) 2026 trev' "Copyright (c) $year $git_name" LICENSE
 
+if $is_library; then
+  # A library starts without the command.
+  sed -i '/^\[project\.scripts\]$/,/^$/d' pyproject.toml
+  sed -i 's@^\(          inherit (project) version\) scripts;$@\1;@' flake.nix
+  : >"src/$module/py.typed"
+  cat >"src/$module/__init__.py" <<EOF
+"""$module says hello."""
+
+
+def hello(name: str) -> str:
+    """Return a greeting for name.
+
+    >>> hello("world")
+    'Hello, world!'
+    """
+    return f"Hello, {name}!"
+EOF
+  mkdir tests
+  cat >tests/test_hello.py <<EOF
+import doctest
+import unittest
+
+import $module
+from $module import hello
+
+
+def load_tests(
+    loader: unittest.TestLoader, tests: unittest.TestSuite, pattern: str | None
+) -> unittest.TestSuite:
+    tests.addTests(doctest.DocTestSuite($module))
+    return tests
+
+
+class TestHello(unittest.TestCase):
+    def test_hello(self) -> None:
+        self.assertEqual(hello("world"), "Hello, world!")
+EOF
+  # Make the new files visible to the Git-backed flake used by nix fmt.
+  git add -N -- "src/$module" tests
+
+  # There's no program to run or put in an image or AppImage. The package's
+  # tests run instead.
+  sed -i 's@^\(                  ./src\)$@\1\n                  ./tests@' flake.nix
+  sed -i -E 's@^( *)test "\$\("\$out/bin/.*$@\1python -m unittest discover --start-directory tests@' flake.nix
+  sed -i -E '/^                (mainProgram|downloadPage) = /d' flake.nix
+  sed -i -E '/^        # nix build #(images|appimages)/,/^        };$/d' flake.nix
+  sed -i '/^### run$/,/^### format$/{/^### format$/!d}' CONTRIBUTING.md
+
+  # flake-release publishes the package from its source, and has nothing else
+  # to release. GitHub has no PyPI registry, so its release publishes to
+  # pypi.org instead.
+  for workflow in .github/workflows/release.yaml .forgejo/workflows/release.yaml; do
+    if [[ -f $workflow ]]; then
+      sed -i -E '/^            (packages|appimages|images)\.x86_64-linux\.default(\.|$)/d; s/^(          PACKAGES:) \|$/\1 packages.x86_64-linux.default/' "$workflow"
+    fi
+  done
+  if [[ -f .github/workflows/release.yaml ]]; then
+    sed -i -e '/^      packages: write$/d' \
+      -e 's/^\(          GITHUB_TOKEN: .*\)$/\1\n          PYPI_TRUSTED_PUBLISHING: "true"/' .github/workflows/release.yaml
+  fi
+  if [[ -f .forgejo/workflows/release.yaml ]]; then
+    sed -i -E '/^          (CONTAINER_REGISTRY_PASSWORD|DELETE_OLD_RELEASE_ARTIFACTS): /d' .forgejo/workflows/release.yaml
+  fi
+fi
+
 if [[ ${provider_host,,} == github.com ]]; then
   is_github=true
   raw_url="https://raw.githubusercontent.com/${repo_path}/refs/heads/main"
@@ -254,10 +337,13 @@ encoded_lock_url="${raw_url}/flake.lock"
 encoded_lock_url=${encoded_lock_url//:/%253A}
 encoded_lock_url=${encoded_lock_url//\//%252F}
 nixpkgs_badge="[![nixpkgs](https://img.shields.io/endpoint?url=https%3A%2F%2Fnix-shield.trev.zip%2Fbadge%3Furl%3D${encoded_lock_url}%26input%3Dnixpkgs&logoColor=%23bac2de&labelColor=%23313244&color=%235277C3)](https://nixos.org/)"
-language_badge="[![python](<https://img.shields.io/badge/dynamic/regex?url=${raw_url}/.python-version&search=(.*)&logo=python&logoColor=%23bac2de&label=version&labelColor=%23313244&color=%23306998>)](https://www.python.org/downloads/)"
+if $is_library; then
+  # Libraries show the minimum python version they support.
+  language_badge="[![python](<https://img.shields.io/badge/dynamic/regex?url=${raw_url}/pyproject.toml&search=requires-python%20%3D%20%22(.*)%22&logo=python&logoColor=%23bac2de&label=version&labelColor=%23313244&color=%23306998>)](https://www.python.org/downloads/)"
+else
+  language_badge="[![python](<https://img.shields.io/badge/dynamic/regex?url=${raw_url}/.python-version&search=(.*)&logo=python&logoColor=%23bac2de&label=version&labelColor=%23313244&color=%23306998>)](https://www.python.org/downloads/)"
+fi
 
-readme_sections=$(sed -n '/^## using$/,$p' README.md)
-readme_sections=${readme_sections//"$old_url"/"$web_url"}
 old_uv_command=$'uvx python-template \\\n  --index https://trev.zip/api/packages/template/pypi'
 old_pip_command=$'pip install python-template \\\n    --index-url https://trev.zip/api/packages/template/pypi/simple'
 if $is_github; then
@@ -270,9 +356,23 @@ else
   pip_command=$'pip install '"$slug"$' \\\n    --index-url '"$registry_url/simple"
   image="$host/${repo_path,,}:latest"
 fi
-readme_sections=${readme_sections//"$old_uv_command"/"$uv_command"}
-readme_sections=${readme_sections//"$old_pip_command"/"$pip_command"}
-readme_sections=${readme_sections//trev.zip\/template\/python:latest/"$image"}
+if $is_library; then
+  if $is_github; then
+    uv_command="uv add $slug"
+    pip_command="pip install $slug"
+  else
+    uv_command=$'uv add '"$slug"$' \\\n  --index '"$registry_url"
+    pip_command=$'pip install '"$slug"$' \\\n    --extra-index-url '"$registry_url/simple"
+  fi
+  readme_sections=$(sed -n '/^## contributing$/,$p' README.md)
+  printf -v readme_sections '## using\n\n### uv\n\n```sh\n%s\n```\n\n### pip\n\n```sh\n%s\n```\n\n%s' "$uv_command" "$pip_command" "$readme_sections"
+else
+  readme_sections=$(sed -n '/^## using$/,$p' README.md)
+  readme_sections=${readme_sections//"$old_url"/"$web_url"}
+  readme_sections=${readme_sections//"$old_uv_command"/"$uv_command"}
+  readme_sections=${readme_sections//"$old_pip_command"/"$pip_command"}
+  readme_sections=${readme_sections//trev.zip\/template\/python:latest/"$image"}
+fi
 
 {
   printf '# %s\n\n' "$title"
