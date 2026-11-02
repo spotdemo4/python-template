@@ -350,16 +350,15 @@ EOF
   sed -i '/^### run$/,/^### format$/{/^### format$/!d}' CONTRIBUTING.md
 
   # flake-release publishes the package from its source, and has nothing else
-  # to release. GitHub has no PyPI registry, so its release publishes to
-  # pypi.org instead.
+  # to release. GitHub has no PyPI registry, so the package is installed from
+  # Git. Setting PYPI_TRUSTED_PUBLISHING opts in to publishing it to pypi.org.
   for workflow in .github/workflows/release.yaml .forgejo/workflows/release.yaml; do
     if [[ -f $workflow ]]; then
       sed -i -E '/^            (packages|appimages|images)\.x86_64-linux\.default(\.|$)/d; s/^(          PACKAGES:) \|$/\1 packages.x86_64-linux.default/' "$workflow"
     fi
   done
   if [[ -f .github/workflows/release.yaml ]]; then
-    sed -i -e '/^      packages: write$/d' \
-      -e 's/^\(          GITHUB_TOKEN: .*\)$/\1\n          PYPI_TRUSTED_PUBLISHING: "true"/' .github/workflows/release.yaml
+    sed -i '/^      packages: write$/d' .github/workflows/release.yaml
   fi
   if [[ -f .forgejo/workflows/release.yaml ]]; then
     sed -i -E '/^          (CONTAINER_REGISTRY_PASSWORD|DELETE_OLD_RELEASE_ARTIFACTS): /d' .forgejo/workflows/release.yaml
@@ -404,8 +403,8 @@ write_readme() {
   fi
   if $is_library; then
     if $is_github; then
-      uv_command="uv add $slug"
-      pip_command="pip install $slug"
+      uv_command="uv add git+$web_url.git"
+      pip_command="pip install git+$web_url.git"
     else
       uv_command=$'uv add '"$slug"$' \\\n  --index '"$registry_url"
       pip_command=$'pip install '"$slug"$' \\\n    --extra-index-url '"$registry_url/simple"

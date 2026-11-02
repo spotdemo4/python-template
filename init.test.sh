@@ -219,9 +219,10 @@ test_library_github() (
 
   assert_initialized hello-github test@example.com
   assert_missing .forgejo
-  assert_contains README.md $'```sh\nuv add hello-github\n```' $'```sh\npip install hello-github\n```'
-  assert_contains .github/workflows/release.yaml 'PYPI_TRUSTED_PUBLISHING: "true"' 'PACKAGES: packages.x86_64-linux.default'
-  assert_lacks .github/workflows/release.yaml 'packages: write' images.x86_64-linux appimages.x86_64-linux
+  assert_contains README.md $'```sh\nuv add git+https://github.com/octo/hello-github.git\n```' \
+    $'```sh\npip install git+https://github.com/octo/hello-github.git\n```'
+  assert_contains .github/workflows/release.yaml 'PACKAGES: packages.x86_64-linux.default'
+  assert_lacks .github/workflows/release.yaml 'packages: write' PYPI_TRUSTED_PUBLISHING images.x86_64-linux appimages.x86_64-linux
 )
 
 test_rollback() (
