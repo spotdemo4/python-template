@@ -224,6 +224,23 @@
             '';
           };
 
+          init = {
+            root = ./.;
+            packages = with pkgs; [
+              git
+              python
+              ruff
+              pyright
+              jq
+              shellcheck
+              self.formatter.${system}
+            ];
+            script = ''
+              shellcheck init.sh init.test.sh
+              bash init.test.sh
+            '';
+          };
+
           nix = {
             root = ./.;
             filter = file: file.hasExt "nix";
