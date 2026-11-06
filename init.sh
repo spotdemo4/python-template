@@ -384,12 +384,12 @@ write_readme() {
   encoded_lock_url="${raw_url}/flake.lock"
   encoded_lock_url=${encoded_lock_url//:/%253A}
   encoded_lock_url=${encoded_lock_url//\//%252F}
-  nixpkgs_badge="[![nixpkgs](https://img.shields.io/endpoint?url=https%3A%2F%2Fnix-shield.trev.zip%2Fbadge%3Furl%3D${encoded_lock_url}%26input%3Dnixpkgs&logoColor=%23bac2de&labelColor=%23313244&color=%235277C3)](https://nixos.org/)"
+  nixpkgs_badge="[![nixpkgs](https://shields.trev.zip/endpoint?url=https%3A%2F%2Fnix-shield.trev.zip%2Fbadge%3Furl%3D${encoded_lock_url}%26input%3Dnixpkgs&logoColor=%23bac2de&labelColor=%23313244&color=%235277C3)](https://nixos.org/)"
   if $is_library; then
     # Libraries show the minimum python version they support.
-    language_badge="[![python](<https://img.shields.io/badge/dynamic/regex?url=${raw_url}/pyproject.toml&search=requires-python%20%3D%20%22(.*)%22&logo=python&logoColor=%23bac2de&label=version&labelColor=%23313244&color=%23306998>)](https://www.python.org/downloads/)"
+    language_badge="[![python](<https://shields.trev.zip/badge/dynamic/regex?url=${raw_url}/pyproject.toml&search=requires-python%20%3D%20%22(.*)%22&replace=%241&logo=python&logoColor=%23bac2de&label=version&labelColor=%23313244&color=%23306998>)](https://www.python.org/downloads/)"
   else
-    language_badge="[![python](<https://img.shields.io/badge/dynamic/regex?url=${raw_url}/.python-version&search=(.*)&logo=python&logoColor=%23bac2de&label=version&labelColor=%23313244&color=%23306998>)](https://www.python.org/downloads/)"
+    language_badge="[![python](<https://shields.trev.zip/badge/dynamic/regex?url=${raw_url}/.python-version&search=(.*)&logo=python&logoColor=%23bac2de&label=version&labelColor=%23313244&color=%23306998>)](https://www.python.org/downloads/)"
   fi
 
   old_uv_command=$'uvx python-template \\\n  --index https://trev.zip/api/packages/template/pypi'
