@@ -144,7 +144,8 @@ test_application() (
   git add -A
   git commit --quiet --message 'Initial commit'
   # The build sandbox has no /usr/bin/env for the shebang
-  printf '%s\n' n n https://git.example.com/octo/hello-world '' '' | bash ./init.sh 'Hello World' "$description"
+  # GitHub (detected), application, no Gitea, Forgejo mirror, Zed, VS Code
+  printf '%s\n' '' n n y https://git.example.com/octo/hello-world '' '' | bash ./init.sh 'Hello World' "$description"
 
   assert_initialized hello-world test@example.com
   assert_eq "$(jq -r .library .template.json)" null '.template.json library'
@@ -162,7 +163,8 @@ test_application() (
     'homepage = "https://github.com/octo/hello-world";' \
     'actions-gh = {' 'actions-fj = {' \
     'name = "Test User";' 'email = "test@example.com";'
-  assert_lacks flake.nix "$old_maintainer"
+  assert_lacks flake.nix "$old_maintainer" 'actions-gt = {' 'renovate-gt = {'
+  assert_missing .gitea
   assert_contains pyproject.toml \
     'description = "Says \"hi\" to ${USER} \\o/"' \
     'authors = [{ name = "Test User", email = "test@example.com" }]' \
@@ -182,12 +184,13 @@ test_library() (
   chmod -x init.sh
   # The template's author keeps their maintainer entry
   git config user.email Me@Trev.xyz
-  printf '%s\n' y y n n | bash init.sh 'Hello Lib' 'Says hello'
+  # Forgejo (detected), library, no GitHub, Gitea mirror, no Zed, no VS Code
+  printf '%s\n' '' y n y https://gitea.example.com/octo/hello-lib n n | bash init.sh 'Hello Lib' 'Says hello'
 
   assert_initialized hello-lib Me@Trev.xyz
   assert_eq "$(jq -r .library .template.json)" true '.template.json library'
   assert_contains flake.nix "maintainers = [ $old_maintainer ];"
-  assert_eq "$(git remote)" origin remotes
+  assert_eq "$(git remote)" $'gitea\norigin' remotes
   assert_missing src/python_template src/hello_lib/python_template .github .zed .vscode
   assert_contains README.md \
     'uv add hello-lib' \
@@ -199,8 +202,13 @@ test_library() (
   assert_lacks pyproject.toml '[project.scripts]' hello_lib:main
   assert_contains flake.nix 'inherit (project) version;' ./tests 'python -m unittest discover'
   assert_lacks flake.nix mainProgram downloadPage 'bin/hello-lib' 'images = {' 'appimages = {' 'actions-gh = {' 'renovate-gh = {'
-  assert_contains .forgejo/workflows/release.yaml 'PACKAGES: packages.x86_64-linux.default'
-  assert_lacks .forgejo/workflows/release.yaml CONTAINER_REGISTRY_PASSWORD images.x86_64-linux appimages.x86_64-linux
+  assert_contains .gitea/renovate.jsonc \
+    '"endpoint": "https://gitea.example.com/api/v1"' \
+    '"repositories": ["octo/hello-lib"]'
+  for workflow in .forgejo/workflows/release.yaml .gitea/workflows/release.yaml; do
+    assert_contains "$workflow" 'PACKAGES: packages.x86_64-linux.default'
+    assert_lacks "$workflow" CONTAINER_REGISTRY_PASSWORD DELETE_OLD_RELEASE_ARTIFACTS images.x86_64-linux appimages.x86_64-linux
+  done
   assert_lacks CONTRIBUTING.md '### run'
   assert_contains src/hello_lib/__init__.py 'def hello(name: str) -> str:'
   [[ -f src/hello_lib/py.typed && -f tests/test_hello.py ]] || fail 'library files are missing'
@@ -215,14 +223,42 @@ test_library_github() (
   new_project "$project" git@github.com:octo/hello-github.git
   cd "$project"
   chmod -x init.sh
-  printf '%s\n' y y n n | bash init.sh 'Hello GitHub' 'Says hello'
+  # GitHub (detected), library, no Gitea, no Forgejo, no Zed, no VS Code
+  printf '%s\n' '' y n n n n | bash init.sh 'Hello GitHub' 'Says hello'
 
   assert_initialized hello-github test@example.com
-  assert_missing .forgejo
+  assert_missing .forgejo .gitea
   assert_contains README.md $'```sh\nuv add git+https://github.com/octo/hello-github.git\n```' \
     $'```sh\npip install git+https://github.com/octo/hello-github.git\n```'
   assert_contains .github/workflows/release.yaml 'PACKAGES: packages.x86_64-linux.default'
   assert_lacks .github/workflows/release.yaml 'packages: write' PYPI_TRUSTED_PUBLISHING images.x86_64-linux appimages.x86_64-linux
+)
+
+test_gitea() (
+  local project=$tmp/hello-gitea
+  new_project "$project" https://gitea.example.com/octo/hello-gitea.git
+  cd "$project"
+  git add -A
+  git commit --quiet --message 'Initial commit'
+  # Gitea, application, GitHub mirror, no Forgejo, no Zed, no VS Code
+  printf '%s\n' Gitea n y git@github.com:octo/hello-mirror.git n n n | bash ./init.sh 'Hello Gitea' 'Says hello'
+
+  assert_initialized hello-gitea test@example.com
+  assert_eq "$(git remote)" $'github\norigin' remotes
+  assert_eq "$(git remote get-url github)" git@github.com:octo/hello-mirror.git 'github remote'
+  assert_missing .forgejo .zed .vscode
+  assert_contains README.md \
+    'https://gitea.example.com/octo/hello-gitea/actions?workflow=check.yaml' \
+    'logo=gitea' \
+    '--index https://gitea.example.com/api/packages/octo/pypi' \
+    'docker run gitea.example.com/octo/hello-gitea:latest'
+  assert_contains flake.nix 'actions-gt = {' 'renovate-gt = {' 'actions-gh = {' 'renovate-gh = {'
+  assert_lacks flake.nix 'actions-fj = {' 'renovate-fj = {'
+  assert_contains .gitea/renovate.jsonc \
+    '"platform": "gitea"' \
+    '"endpoint": "https://gitea.example.com/api/v1"' \
+    '"repositories": ["octo/hello-gitea"]'
+  assert_contains .github/renovate.jsonc '"repositories": ["octo/hello-mirror"]'
 )
 
 test_rollback() (
@@ -238,9 +274,17 @@ test_rollback() (
     bash ./init.sh Rollback Rollback </dev/null
   rm untracked
 
-  # The Forgejo URL is read after the template has been changed
+  # The forge is checked before the template is changed
+  assert_fails 'Forge must be github, gitea or forgejo.' \
+    bash ./init.sh Rollback Rollback < <(printf '%s\n' gitlab)
+  assert_fails 'Gitea origin URL cannot use github.com.' \
+    bash ./init.sh Rollback Rollback < <(printf '%s\n' gitea)
+
+  # Mirror URLs are read after the template has been changed
   assert_fails 'Unsupported repository URL.' \
-    bash ./init.sh Rollback Rollback < <(printf '%s\n' n n ftp://git.example.com/octo/rollback)
+    bash ./init.sh Rollback Rollback < <(printf '%s\n' '' n n y ftp://git.example.com/octo/rollback)
+  assert_fails 'Gitea repository URL cannot use github.com.' \
+    bash ./init.sh Rollback Rollback < <(printf '%s\n' github n y https://github.com/octo/rollback)
   assert_eq "$(git rev-parse HEAD)" "$head" HEAD
   assert_eq "$(git status --porcelain --untracked-files=all)" '' 'worktree status'
   assert_missing src/rollback "$tmp"/.rollback.git-*
@@ -257,7 +301,7 @@ chmod +x "$tmp/bin/nix"
 PATH=$tmp/bin:$PATH
 
 create_upstream
-for test in test_parse_remote test_slugify test_python_module test_nix_string test_toml_string test_application test_library test_library_github test_rollback; do
+for test in test_parse_remote test_slugify test_python_module test_nix_string test_toml_string test_application test_library test_library_github test_gitea test_rollback; do
   "$test"
   printf 'ok: %s\n' "$test"
 done
