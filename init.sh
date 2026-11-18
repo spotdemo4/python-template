@@ -449,7 +449,8 @@ write_readme() {
     readme_sections=$(sed -n '/^## contributing$/,$p' README.md)
     printf -v readme_sections '## using\n\n### uv\n\n```sh\n%s\n```\n\n### pip\n\n```sh\n%s\n```\n\n%s' "$uv_command" "$pip_command" "$readme_sections"
   else
-    if $is_github; then
+    # Programs that aren't in a package registry are installed from Git.
+    if $is_github || ! $publish_package; then
       uv_command="uvx --from git+$web_url.git $slug"
       pip_command="pip install git+$web_url.git"
     else
@@ -523,6 +524,27 @@ configure_providers() {
       configure_renovate "$other" "$secondary_repo_path" "$secondary_web_url"
     else
       remove_forge "$other"
+    fi
+  done
+}
+
+# Sets publish_package from whether the project publishes to the package
+# registry. flake-release publishes when PACKAGE_REGISTRY_TOKEN is set, and only
+# Gitea and Forgejo have a PyPI registry. Libraries are always published.
+read_publishing() {
+  local reply workflow
+  publish_package=true
+  if $is_library || [[ ! -d .gitea && ! -d .forgejo ]]; then
+    return
+  fi
+  read -r -p 'Publish the program to the package registry? [y/N] ' reply || reply=
+  if [[ $reply =~ ^[Yy]([Ee][Ss])?$ ]]; then
+    return
+  fi
+  publish_package=false
+  for workflow in .gitea/workflows/release.yaml .forgejo/workflows/release.yaml; do
+    if [[ -f $workflow ]]; then
+      sed -i '/^          PACKAGE_REGISTRY_TOKEN: /d' "$workflow"
     fi
   done
 }
@@ -608,8 +630,9 @@ main() {
   if $is_library; then
     make_library
   fi
-  write_readme
   configure_providers
+  read_publishing
+  write_readme
   configure_editors
   commit_new_repository
   activate_new_repository

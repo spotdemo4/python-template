@@ -144,8 +144,8 @@ test_application() (
   git add -A
   git commit --quiet --message 'Initial commit'
   # The build sandbox has no /usr/bin/env for the shebang
-  # GitHub (detected), application, no Gitea, Forgejo mirror, Zed, VS Code
-  printf '%s\n' '' n n y https://git.example.com/octo/hello-world '' '' | bash ./init.sh 'Hello World' "$description"
+  # GitHub (detected), application, no Gitea, Forgejo mirror, publish, Zed, VS Code
+  printf '%s\n' '' n n y https://git.example.com/octo/hello-world y '' '' | bash ./init.sh 'Hello World' "$description"
 
   assert_initialized hello-world test@example.com
   assert_eq "$(jq -r .library .template.json)" null '.template.json library'
@@ -173,6 +173,7 @@ test_application() (
   assert_contains .forgejo/renovate.jsonc \
     '"endpoint": "https://git.example.com/api/v1"' \
     '"repositories": ["octo/hello-world"]'
+  assert_contains .forgejo/workflows/release.yaml 'PACKAGE_REGISTRY_TOKEN: ${{ secrets.PACKAGE_TOKEN }}'
   [[ -f src/hello_world/__init__.py && -d .zed && -d .vscode ]] || fail 'application files are missing'
 )
 
@@ -240,8 +241,8 @@ test_gitea() (
   cd "$project"
   git add -A
   git commit --quiet --message 'Initial commit'
-  # Gitea, application, GitHub mirror, no Forgejo, no Zed, no VS Code
-  printf '%s\n' Gitea n y git@github.com:octo/hello-mirror.git n n n | bash ./init.sh 'Hello Gitea' 'Says hello'
+  # Gitea, application, GitHub mirror, no Forgejo, publish, no Zed, no VS Code
+  printf '%s\n' Gitea n y git@github.com:octo/hello-mirror.git n y n n | bash ./init.sh 'Hello Gitea' 'Says hello'
 
   assert_initialized hello-gitea test@example.com
   assert_eq "$(git remote)" $'github\norigin' remotes
@@ -259,6 +260,26 @@ test_gitea() (
     '"endpoint": "https://gitea.example.com/api/v1"' \
     '"repositories": ["octo/hello-gitea"]'
   assert_contains .github/renovate.jsonc '"repositories": ["octo/hello-mirror"]'
+  assert_contains .gitea/workflows/release.yaml 'PACKAGE_REGISTRY_TOKEN: ${{ secrets.PACKAGE_TOKEN }}'
+)
+
+test_unpublished() (
+  local project=$tmp/hello-unpublished
+  new_project "$project" https://git.example.com/octo/hello-unpublished.git
+  cd "$project"
+  git add -A
+  git commit --quiet --message 'Initial commit'
+  # Forgejo (detected), application, no GitHub, no Gitea, no publishing, no Zed, no VS Code
+  printf '%s\n' '' n n n n n n | bash ./init.sh 'Hello Unpublished' 'Says hello'
+
+  assert_initialized hello-unpublished test@example.com
+  assert_contains README.md \
+    'uvx --from git+https://git.example.com/octo/hello-unpublished.git hello-unpublished' \
+    'pip install git+https://git.example.com/octo/hello-unpublished.git' \
+    'docker run git.example.com/octo/hello-unpublished:latest'
+  assert_lacks README.md api/packages
+  assert_contains .forgejo/workflows/release.yaml CONTAINER_REGISTRY_PASSWORD
+  assert_lacks .forgejo/workflows/release.yaml PACKAGE_REGISTRY_TOKEN
 )
 
 test_rollback() (
@@ -301,7 +322,7 @@ chmod +x "$tmp/bin/nix"
 PATH=$tmp/bin:$PATH
 
 create_upstream
-for test in test_parse_remote test_slugify test_python_module test_nix_string test_toml_string test_application test_library test_library_github test_gitea test_rollback; do
+for test in test_parse_remote test_slugify test_python_module test_nix_string test_toml_string test_application test_library test_library_github test_gitea test_unpublished test_rollback; do
   "$test"
   printf 'ok: %s\n' "$test"
 done
