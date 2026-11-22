@@ -34,7 +34,7 @@ Renovate opens automerging fix PRs for vulnerable direct dependencies, so check 
 
    Or in `pyproject.toml`, under `[tool.pysentry.ignore]` with `version = 1` in `[tool.pysentry]`. `.pysentry.toml` takes precedence when both exist. Check the file with `nix develop .#vulnerable -c pysentry config validate`.
 
-`uv` isn't in the `vulnerable` dev shell, so run the `uv` commands in the default dev shell. The Nix build takes its dependencies from nixpkgs, not `uv.lock`, so fixing the lock file doesn't change the built package. If the vulnerable version also comes from nixpkgs, run `nix flake update nixpkgs`.
+`uv` isn't in the `vulnerable` dev shell, so run the `uv` commands in the default dev shell. The Nix build and the development environment both install the wheels pinned in `uv.lock`, so fixing the lock file fixes both.
 
 Maintenance warnings (archived, deprecated or unmaintained packages) don't fail the job.
 

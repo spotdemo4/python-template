@@ -340,7 +340,6 @@ apply_metadata() {
 make_library() {
   local workflow
   sed -i '/^\[project\.scripts\]$/,/^$/d' pyproject.toml
-  sed -i 's@^\(          inherit (project) version\) scripts;$@\1;@' flake.nix
   : >"src/$module/py.typed"
   cat >"src/$module/__init__.py" <<EOF
 """$module says hello."""
@@ -380,7 +379,7 @@ EOF
   # There's no program to run or put in an image or AppImage. The package's
   # tests run instead.
   sed -i 's@^\(                  ./src\)$@\1\n                  ./tests@' flake.nix
-  sed -i -E 's@^( *)test "\$\("\$out/bin/.*$@\1python -m unittest discover --start-directory tests@' flake.nix
+  sed -i -E 's@^( *)test "\$\([^)]*\)" = "Hello, world!"$@\1python -m unittest discover --start-directory tests@' flake.nix
   sed -i -E '/^                (mainProgram|downloadPage) = /d' flake.nix
   sed -i -E '/^        # nix build #(images|appimages)/,/^        };$/d' flake.nix
   sed -i '/^### run$/,/^### format$/{/^### format$/!d}' CONTRIBUTING.md

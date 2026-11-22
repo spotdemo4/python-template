@@ -182,7 +182,7 @@ test_application() (
   assert_contains flake.nix \
     'description = "Says \"hi\" to \${USER} \\o/";' \
     'mainProgram = "hello-world";' \
-    'pythonImportsCheck = [ "hello_world" ];' \
+    "python -c 'import hello_world'" 'test "$(hello-world)" = "Hello, world!"' \
     'homepage = "https://github.com/octo/hello-world";' \
     'actions-gh = {' 'actions-fj = {' \
     'name = "Test User";' 'email = "test@example.com";'
@@ -231,8 +231,8 @@ test_library() (
     'requires-python%20%3D%20%22(.*)%22'
   assert_lacks README.md uvx 'docker run' .python-version
   assert_lacks pyproject.toml '[project.scripts]' hello_lib:main
-  assert_contains flake.nix 'inherit (project) version;' ./tests 'python -m unittest discover'
-  assert_lacks flake.nix mainProgram downloadPage 'bin/hello-lib' 'images = {' 'appimages = {' 'actions-gh = {' 'renovate-gh = {'
+  assert_contains flake.nix ./tests 'python -m unittest discover'
+  assert_lacks flake.nix mainProgram downloadPage '$(hello-lib)' 'images = {' 'appimages = {' 'actions-gh = {' 'renovate-gh = {'
   assert_contains .gitea/renovate.jsonc \
     '"endpoint": "https://gitea.example.com/api/v1"' \
     '"repositories": ["octo/hello-lib"]'

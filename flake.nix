@@ -33,16 +33,13 @@
       system: pkgs:
       let
         python = pkgs.python314;
-        dependencies = with python.pkgs; [ ];
 
-        # editable install of this project for development
-        editable = python.pkgs.mkPythonEditablePackage {
-          pname = project.name;
-          inherit (project) version scripts;
-          inherit dependencies;
-          root = "$REPO_ROOT/src";
+        # dependencies from uv.lock, with this project installed editable
+        pythonEnv = pkgs.trev.libs.mkUvEnv {
+          src = ./.;
+          inherit python;
+          editableRoot = "$REPO_ROOT/src";
         };
-        pythonEnv = python.withPackages (_: [ editable ]);
       in
       {
         # nix develop [#...]
@@ -112,7 +109,7 @@
 
         # nix build [#...]
         packages = {
-          default = python.pkgs.buildPythonPackage (
+          default = pkgs.trev.libs.mkUvPackage (
             final: with pkgs.lib; {
               pname = project.name;
               inherit (project) version;
@@ -121,25 +118,20 @@
                 root = ./.;
                 fileset = fileset.unions [
                   ./pyproject.toml
+                  ./uv.lock
                   ./LICENSE
                   ./README.md
                   ./src
                 ];
               };
+              inherit python;
 
-              pyproject = true;
-              build-system = with python.pkgs; [
-                uv-build-latest
-              ];
-              # uv-build-latest and the pyproject.toml bound update separately
-              pypaBuildFlags = [ "--skip-dependency-check" ];
-              inherit dependencies;
-
-              pythonImportsCheck = [ "python_template" ];
+              # runs in a virtual environment with the project and its dependencies
               doCheck = true;
               checkPhase = ''
                 runHook preCheck
-                test "$("$out/bin/python-template")" = "Hello, world!"
+                python -c 'import python_template'
+                test "$(python-template)" = "Hello, world!"
                 runHook postCheck
               '';
 
