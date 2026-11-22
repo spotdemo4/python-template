@@ -2,5 +2,8 @@
 # create a .envrc symlink to this file or copy its contents to .envrc
 # then run `direnv allow` to enable
 
+# the python environment is built from these, watched before `use flake` so
+# nix-direnv rebuilds its cached shell when they change
+watch_file uv.lock pyproject.toml
 use flake
 dotenv_if_exists
